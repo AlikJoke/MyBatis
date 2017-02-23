@@ -1,6 +1,5 @@
 package ru.bpc.cm.monitoring.orm;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Arg;
@@ -12,6 +11,14 @@ import org.apache.ibatis.annotations.Select;
 import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.utils.Pair;
 
+/**
+ * Маппер для {@link GroupStateController}.
+ * 
+ * @author Alimurad A. Ramazanov
+ * @since 19.02.2007
+ * @version 1.0.0
+ *
+ */
 public interface GroupActualStateMapper extends IMapper {
 
 	@ConstructorArgs({

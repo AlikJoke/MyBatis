@@ -30,6 +30,14 @@ import ru.bpc.cm.items.monitoring.AtmCassetteItem;
 import ru.bpc.cm.items.monitoring.AtmRecyclingCassetteItem;
 import ru.bpc.cm.utils.ObjectPair;
 
+/**
+ * Маппер для {@link ActualStateController}.
+ * 
+ * @author Alimurad A. Ramazanov
+ * @since 19.02.2007
+ * @version 1.0.1
+ *
+ */
 public interface AtmActualStateMapper extends IMapper {
 
 	@ConstructorArgs({ 
@@ -253,6 +261,8 @@ public interface AtmActualStateMapper extends IMapper {
 			@Param("secCurrOutDifference") Double secCurrOutDifference, @Param("secCurr3") Double secCurr3,
 			@Param("secCurr4") Double secCurr4, @Param("sec2Curr1") Double sec2Curr1,
 			@Param("sec2Curr2") Double sec2Curr2, @Param("sec2CurrInDifference") Double sec2CurrInDifference,
+			@Param("sec2CurrOutDifference") Double sec2CurrOutDifference,
+			@Param("sec2Curr3") Double sec2Curr3, @Param("sec2Curr4") Double sec2Curr4,
 			@Param("sec3Curr1") Double sec3Curr1, @Param("sec3Curr2") Double sec3Curr2,
 			@Param("sec3CurrInDifference") Double sec3CurrInDifference,
 			@Param("sec3CurrOutDifference") Double sec3CurrOutDifference, @Param("sec3Curr3") Double sec3Curr3,
@@ -306,7 +316,7 @@ public interface AtmActualStateMapper extends IMapper {
 
 	@Result(column = "vcheck", javaType = Boolean.class)
 	@Select("SELECT count(1) as vcheck " + "FROM T_CM_ATM_ACTUAL_STATE")
-	boolean checkAtmActStateTable();
+	int checkAtmActStateTable();
 
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "number", javaType = Integer.class),
@@ -364,6 +374,15 @@ public interface AtmActualStateMapper extends IMapper {
 			+ ") " + "WHERE " + "intbal.cass_type = #{cassType} ")
 	void updateCalculatedRemainingForAtms2(@Param("cassType") Integer cassType);
 
+	@Update("update t_cm_intgr_cass_balance intbal " + "SET CASS_REMAINING_CALC =  " + "(  "
+			+ "select cs.cass_remaining " + "from " + "t_cm_cashin_r_cass_stat cs " + "where  "
+			+ "cs.atm_id = intbal.atm_id " + "and " + "cs.cass_number = intbal.cass_number " + "and "
+			+ "cs.cash_in_encashment_id = (select CASH_IN_ENCASHMENT_ID from t_cm_atm_actual_state where atm_id = intbal.atm_id) "
+			+ "and "
+			+ "cs.stat_date = (select CASH_IN_STAT_DATE from t_cm_atm_actual_state where atm_id = intbal.atm_id) "
+			+ ") " + "WHERE " + "intbal.cass_type = #{cassType} ")
+	void updateCalculatedRemainingForAtms3(@Param("cassType") Integer cassType);
+
 	@ConstructorArgs({
 		@Arg(column = "ATM_ID", javaType = Integer.class),
 		@Arg(column = "CASS_TYPE", javaType = Integer.class),
@@ -390,5 +409,5 @@ public interface AtmActualStateMapper extends IMapper {
 
 	@Result(column = "ATM_STATE", javaType = Integer.class)
 	@Select("SELECT ATM_STATE FROM T_CM_ATM_ACTUAL_STATE WHERE ATM_ID = #{atmId} ")
-	boolean getAtmDeviceState(@Param("atmId") Integer atmId);
+	Integer getAtmDeviceState(@Param("atmId") Integer atmId);
 }
