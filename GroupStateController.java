@@ -23,7 +23,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 			atmEncashmentCassList = Optional.ofNullable(mapper.getAtmEncPlanSums(JdbcUtils.getSqlDate(date), atmId))
 					.orElse(new ArrayList<Pair>());
 		} finally {
@@ -37,7 +37,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional.ofNullable(
 					mapper.getAtmEncPeriodSums(JdbcUtils.getSqlDate(dateFrom), JdbcUtils.getSqlDate(dateFrom), atmId))
@@ -52,7 +52,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional.ofNullable(mapper.getAtmRemainingSums(atmId))
 					.orElse(new ArrayList<Pair>());
@@ -67,7 +67,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional
 					.ofNullable(mapper.getAtmEncStatSums(JdbcUtils.getSqlDate(date), atmId, actionType.getId()))
@@ -82,7 +82,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional.ofNullable(mapper.getAtmsEncPlanSums(JdbcUtils.getSqlDate(date)))
 					.orElse(new ArrayList<Pair>());
@@ -96,7 +96,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional
 					.ofNullable(
@@ -112,7 +112,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional.ofNullable(mapper.getAtmsRemainingSums()).orElse(new ArrayList<Pair>());
 		} finally {
@@ -126,7 +126,7 @@ public class GroupStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Pair> atmEncashmentCassList = new ArrayList<Pair>();
 		try {
-			GroupActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			GroupActualStateMapper mapper = session.getMapper(getMapperClass());
 
 			atmEncashmentCassList = Optional
 					.ofNullable(mapper.getAtmsEncStatSums(JdbcUtils.getSqlDate(date), actionType.getId()))

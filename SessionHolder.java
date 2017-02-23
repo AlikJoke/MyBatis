@@ -44,12 +44,4 @@ public class SessionHolder implements ISessionHolder {
 			throw new IllegalStateException("Session can't be null");
 		session.close();
 	}
-
-	@Override
-	public <T extends IMapper> T getMapper(SqlSession session, Class<T> clazz) {
-		T mapper = session.getMapper(clazz);
-		if (mapper == null)
-			throw new IllegalArgumentException("Mapper can't be null");
-		return mapper;
-	}
 }

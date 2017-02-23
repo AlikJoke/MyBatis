@@ -6,8 +6,6 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 
-import ru.bpc.cm.config.IMapper;
-
 /**
  * Интерфейс, хранящий основные методы для работы с сессией MyBatis ORM.
  * 
@@ -18,17 +16,6 @@ import ru.bpc.cm.config.IMapper;
  */
 @Local
 public interface ISessionHolder {
-
-	/**
-	 * Возвращает маппер для класса.
-	 * <p>
-	 * 
-	 * @see IMapper
-	 * @param clazz
-	 *            - класс интерфейса-маппера.
-	 * @return маппер; {@code null}, если маппера не существует.
-	 */
-	<T extends IMapper> T getMapper(SqlSession session, Class<T> clazz);
 
 	/**
 	 * Получает сессию по классу-мапперу, добавляя ее в

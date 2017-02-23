@@ -48,7 +48,7 @@ public class ActualStateController {
 			MonitoringFilter addFilter) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			AtmActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
 			List<AtmActualStateItem> atmActualStateList = Optional.ofNullable(mapper.getAtmActualStateList(addFilter))
 					.orElse(new ArrayList<AtmActualStateItem>());
 
@@ -96,7 +96,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		List<Integer> res = new ArrayList<Integer>();
 		try {
-			for (CodesItem item : sessionHolder.getMapper(session, getMapperClass()).getCurrenciesList(atmId)) {
+			for (CodesItem item : session.getMapper(getMapperClass()).getCurrenciesList(atmId)) {
 				res.add(item.getMainCurrCode());
 				res.add(item.getSecCurrCode());
 				res.add(item.getSec2CurrCode());
@@ -114,7 +114,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		ObjectPair<Date, Integer> res = null;
 		try {
-			res = sessionHolder.getMapper(session, getMapperClass()).getCashOutLastStat(atmId);
+			res = session.getMapper(getMapperClass()).getCashOutLastStat(atmId);
 		} finally {
 			session.close();
 		}
@@ -125,7 +125,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		int res = 0;
 		try {
-			res = sessionHolder.getMapper(session, getMapperClass()).getCashOutHoursFromLastWithdrawal(atmId);
+			res = session.getMapper(getMapperClass()).getCashOutHoursFromLastWithdrawal(atmId);
 		} finally {
 			session.close();
 		}
@@ -136,7 +136,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		int res = 0;
 		try {
-			res = sessionHolder.getMapper(session, getMapperClass()).getCashInHoursFromLastAddition(atmId);
+			res = session.getMapper(getMapperClass()).getCashInHoursFromLastAddition(atmId);
 		} finally {
 			session.close();
 		}
@@ -147,7 +147,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		ObjectPair<Date, Integer> res = null;
 		try {
-			res = sessionHolder.getMapper(session, getMapperClass()).getCashInLastStat(atmId);
+			res = session.getMapper(getMapperClass()).getCashInLastStat(atmId);
 		} finally {
 			session.close();
 		}
@@ -248,7 +248,7 @@ public class ActualStateController {
 
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			AtmActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
 			check = mapper.getVCheck(forecast.getAtmId());
 			if (check == 0) {
 				Timestamp cashInStatDate = null, outOfCashOutDate = null, outOfCashInDate = null;
@@ -425,8 +425,7 @@ public class ActualStateController {
 			int rejectVolume, int cashInRVolume) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			sessionHolder.getMapper(session, getMapperClass()).updateInitialsForAtm(cashInVolume, rejectVolume,
-					cashInRVolume, atmId);
+			session.getMapper(getMapperClass()).updateInitialsForAtm(cashInVolume, rejectVolume, cashInRVolume, atmId);
 		} finally {
 			session.commit();
 			session.close();
@@ -437,7 +436,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		int cnt = 0;
 		try {
-			cnt = sessionHolder.getMapper(session, getMapperClass()).checkAtmActStateTable();
+			cnt = session.getMapper(getMapperClass()).checkAtmActStateTable();
 		} finally {
 			session.close();
 		}
@@ -448,8 +447,7 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			cassList.addAll(
-					sessionHolder.getMapper(session, getMapperClass()).getCashOutCassettes(ecnashmentId, atmId));
+			cassList.addAll(session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId, atmId));
 		} finally {
 			session.close();
 		}
@@ -459,8 +457,7 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			cassList.addAll(sessionHolder.getMapper(session, getMapperClass())
-					.getCashInRecyclingCassettes(cashInEcnashmentId, atmId));
+			cassList.addAll(session.getMapper(getMapperClass()).getCashInRecyclingCassettes(cashInEcnashmentId, atmId));
 		} finally {
 			session.close();
 		}
@@ -469,7 +466,7 @@ public class ActualStateController {
 	public static void saveAtmCassettes(ISessionHolder sessionHolder, int atmId, List<AtmCassetteItem> atmCassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			AtmActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
 			int check = 0;
 
 			for (AtmCassetteItem cass : atmCassList) {
@@ -492,7 +489,7 @@ public class ActualStateController {
 	protected static void updateCalculatedRemainingForAtms(ISessionHolder sessionHolder) throws SQLException {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			AtmActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
 			mapper.updateCalculatedRemainingForAtms1(AtmCassetteType.CASH_OUT_CASS.getId());
 			mapper.updateCalculatedRemainingForAtms2(AtmCassetteType.CASH_IN_CASS.getId());
 			mapper.updateCalculatedRemainingForAtms3(AtmCassetteType.CASH_IN_R_CASS.getId());
@@ -506,7 +503,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		boolean balancesAreIncorrect = false;
 		try {
-			AtmActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
 			List<BalanceItem> balances = mapper.checkLoadedBalances1(BALANCES_CHECK_THRESHHOLD);
 
 			for (BalanceItem item : balances) {
@@ -528,7 +525,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		boolean balancesAreIncorrect = false;
 		try {
-			AtmActualStateMapper mapper = sessionHolder.getMapper(session, getMapperClass());
+			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
 			List<BalanceItem> balances = mapper.checkLoadedBalances2(BALANCES_CHECK_THRESHHOLD, atmList);
 
 			for (BalanceItem item : balances) {
@@ -549,7 +546,7 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		Integer atmState = null;
 		try {
-			atmState = sessionHolder.getMapper(session, getMapperClass()).getAtmDeviceState(atmId);
+			atmState = session.getMapper(getMapperClass()).getAtmDeviceState(atmId);
 			if (atmState != null)
 				return atmState == 0;
 		} catch (Exception e) {
