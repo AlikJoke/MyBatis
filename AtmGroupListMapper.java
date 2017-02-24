@@ -58,6 +58,7 @@ public interface AtmGroupListMapper extends IMapper {
 	
 	@SelectProvider(type = AtmGroupListBuilder.class, method = "getAtmGroupIdListBuilder")
 	@ResultType(Integer.class)
+	@Result(column = "ID")
 	List<Integer> getAtmGroupIdList(@Param("personId") String personId, @Param("typeId") Integer typeId,
 			@Param("fetchSubordinatesGroups") Boolean fetchSubordinatesGroups);
 	
