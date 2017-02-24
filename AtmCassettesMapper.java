@@ -11,16 +11,25 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.mapping.StatementType;
 
+import ru.bpc.cm.cashmanagement.AtmCassettesController;
 import ru.bpc.cm.cashmanagement.orm.handlers.EnumHandler;
 import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.items.enums.AtmCassetteType;
 import ru.bpc.cm.items.monitoring.AtmCassetteItem;
 
+/**
+ * Интерфейс-маппер для класса {@link AtmCassettesController}.
+ * 
+ * @author Alimurad A. Ramazanov
+ * @since 24.02.2017
+ * @version 1.0.0
+ *
+ */
 public interface AtmCassettesMapper extends IMapper {
 
 	@Select("SELECT count(1) as CNT FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId} "
 			+ "AND CASS_TYPE = #{cassTypeId} ")
-	@Result(column = "CNT")
+	@Result(column = "CNT", javaType = Integer.class)
 	@Options(useCache = true, statementType = StatementType.PREPARED)
 	int getAtmCassCount(@Param("atmId") int atmId, @Param("cassTypeId") int cassTypeId);
 
@@ -29,7 +38,7 @@ public interface AtmCassettesMapper extends IMapper {
 	@Results(value = { @Result(property = "number", column = "CASS_NUMBER", id = true),
 			@Result(property = "denom", column = "CASS_VALUE"), @Result(property = "curr", column = "CASS_CURR"),
 			@Result(property = "type", column = "CASS_TYPE", typeHandler = EnumHandler.class, javaType = AtmCassetteType.class) })
-	@Options(useCache = true, statementType = StatementType.PREPARED)
+	@Options(useCache = true, statementType = StatementType.PREPARED, fetchSize = 1000)
 	List<AtmCassetteItem> getAtmCassettes(@Param("atmId") int atmId);
 
 	@Insert({ "<script>", "insert into mybatis_demo (ATM_ID, CASS_TYPE, CASS_NUMBER, CASS_CURR, CASS_VALUE)", "values ",
