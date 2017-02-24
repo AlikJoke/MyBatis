@@ -15,6 +15,7 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.session.ResultHandler;
 
 import ru.bpc.cm.cashmanagement.orm.builders.AtmActualStateBuilder;
 import ru.bpc.cm.cashmanagement.orm.handlers.CachOutHoursFromLastWithdrawalHandler;
@@ -28,6 +29,7 @@ import ru.bpc.cm.items.monitoring.AtmActualStateItem;
 import ru.bpc.cm.items.monitoring.AtmCashOutCassetteItem;
 import ru.bpc.cm.items.monitoring.AtmCassetteItem;
 import ru.bpc.cm.items.monitoring.AtmRecyclingCassetteItem;
+import ru.bpc.cm.monitoring.ActualStateController;
 import ru.bpc.cm.utils.ObjectPair;
 
 /**
@@ -326,7 +328,8 @@ public interface AtmActualStateMapper extends IMapper {
 	@Select("SELECT distinct CASS_NUMBER,CASS_VALUE,CASS_CURR " + "FROM T_CM_CASHOUT_CASS_STAT "
 			+ "WHERE encashment_id = #{encId} and atm_id = @{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmCassetteItem> getCashOutCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId);
+	List<AtmCassetteItem> getCashOutCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId,
+			ResultHandler<AtmCassetteItem> handler);
 
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "number", javaType = Integer.class),
@@ -336,8 +339,9 @@ public interface AtmActualStateMapper extends IMapper {
 	@Select("SELECT distinct CASS_NUMBER,CASS_VALUE,CASS_CURR " + "FROM T_CM_CASHOUT_CASS_STAT "
 			+ "WHERE encashment_id = #{encId} and atm_id = @{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmCassetteItem> getCashInRecyclingCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId);
-	
+	List<AtmCassetteItem> getCashInRecyclingCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId,
+			ResultHandler<AtmCassetteItem> handler);
+
 	@Select("SELECT count(1) as vcheck FROM T_CM_ATM_CASSETTES where ATM_ID = #{atmId} "
 			+ "AND CASS_TYPE = #{cassType} AND CASS_NUMBER = #{cassNumber} ")
 	int checkAtmCassettes(@Param("atmId") Integer atmId, @Param("cassType") Integer cassType,

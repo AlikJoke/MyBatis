@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import ejbs.cm.svcm.ISessionHolder;
 import ru.bpc.cm.cashmanagement.CurrencyConverter;
+import ru.bpc.cm.cashmanagement.orm.handlers.AtmCassetteInResultHandler;
+import ru.bpc.cm.cashmanagement.orm.handlers.AtmCassetteOutResultHandler;
 import ru.bpc.cm.cashmanagement.orm.items.BalanceItem;
 import ru.bpc.cm.cashmanagement.orm.items.CodesItem;
 import ru.bpc.cm.filters.MonitoringFilter;
@@ -447,7 +449,8 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			cassList.addAll(session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId, atmId));
+			cassList.addAll(session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId, atmId,
+					new AtmCassetteOutResultHandler()));
 		} finally {
 			session.close();
 		}
@@ -457,7 +460,8 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			cassList.addAll(session.getMapper(getMapperClass()).getCashInRecyclingCassettes(cashInEcnashmentId, atmId));
+			cassList.addAll(session.getMapper(getMapperClass()).getCashInRecyclingCassettes(cashInEcnashmentId, atmId,
+					new AtmCassetteInResultHandler()));
 		} finally {
 			session.close();
 		}
