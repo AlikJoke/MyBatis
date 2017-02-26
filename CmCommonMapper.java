@@ -1,20 +1,28 @@
 package ru.bpc.cm.cashmanagement.orm;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Arg;
 import org.apache.ibatis.annotations.ConstructorArgs;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultType;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.SelectProvider;
 
 import ru.bpc.cm.cashmanagement.CmCommonController;
+import ru.bpc.cm.cashmanagement.orm.builders.CmCommonBuilder;
 import ru.bpc.cm.cashmanagement.orm.items.CodesItem;
+import ru.bpc.cm.cashmanagement.orm.items.ConvertionsRateItem;
+import ru.bpc.cm.cashmanagement.orm.items.FullAddressItem;
 import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.utils.ObjectPair;
+import ru.bpc.cm.utils.Pair;
 
 /**
  * Интерфейс-маппер для класса {@link CmCommonController}.
@@ -144,5 +152,99 @@ public interface CmCommonMapper extends IMapper {
 	ObjectPair<String, Double> convertValue(@Param("destCurr") Integer destCurr, @Param("srcCurr") Integer srcCurr,
 			@Param("instId") String instId);
 	
+	@ConstructorArgs({ 
+		@Arg(column = "src_curr_code", javaType = String.class),
+		@Arg(column = "dest_curr_code", javaType = String.class),
+		@Arg(column = "multiple_flag", javaType = String.class),
+		@Arg(column = "cnvt_rate", javaType = Double.class)
+	})
+	@SelectProvider(type = CmCommonBuilder.class, method = "getConvertionsRatesBuilder")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ConvertionsRateItem> getConvertionsRates(@Param("atmId") Integer atmId,
+			@Param("currencies") List<Integer> currencies);
 	
+	@Insert("INSERT INTO T_CM_ENC_PLAN_LOG "
+			+ "(ENC_PLAN_ID,LOG_DATE,USER_ID,MESSAGE,MESSAGE_TYPE,LOG_ID,MESSAGE_PARAMS) VALUES "
+			+ "(#{encPlanId},#{currTime},#{personId},#{message},#{logType},#{nextSeq},#{printedCollection})")
+	void insertEncashmentMessage(@Param("nextSeq") String nextSeq, @Param("encPlanId") Integer encPlanId,
+			@Param("currTime") Timestamp currTime, @Param("personId") Integer personId,
+			@Param("message") String message, @Param("logType") Integer logType,
+			@Param("printedCollection") String coll);
+	
+	@Delete("DELETE FROM T_CM_ENC_PLAN_LOG WHERE LOG_ID = #{logId} ")
+	void deleteEncashmentMessage(@Param("logId") Integer logId);
+	
+	@ConstructorArgs({
+		@Arg(column = "CASH_OUT_ENCASHMENT_ID", javaType = Integer.class),
+		@Arg(column = "CASH_OUT_STAT_DATE", javaType = Date.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT CASH_OUT_ENCASHMENT_ID,CASH_OUT_STAT_DATE FROM T_CM_ATM_ACTUAL_STATE WHERE "
+			+ " ATM_ID = #{atmId} ")
+	ObjectPair<Integer, Date> getCashOutStatDate(@Param("atmId") Integer atmId);
+	
+	@Result(column = "state")
+	@Select("select cass_state as state from T_CM_CASHOUT_CASS_STAT cs where cs.atm_id = #{atmId} "
+			+ "AND cs.encashment_id = #{encId} AND cs.stat_date = #{statDate} ")
+	@ResultType(Integer.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> getCashOutStatus(@Param("atmId") Integer atmId, @Param("encId") Integer encId,
+			@Param("statDate") Date statDate);
+	
+	@ConstructorArgs({
+		@Arg(column = "CASH_IN_ENCASHMENT_ID", javaType = Integer.class),
+		@Arg(column = "CASH_IN_STAT_DATE", javaType = Date.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT CASH_IN_ENCASHMENT_ID,CASH_IN_STAT_DATE FROM T_CM_ATM_ACTUAL_STATE WHERE ATM_ID = #{atmId} ")
+	ObjectPair<Integer, Date> getCashInStatDate(@Param("atmId") Integer atmId);
+
+	@Result(column = "state")
+	@Select("select cash_in_state as state from T_CM_CASHIN_STAT cs where cs.atm_id = #{atmId} "
+			+ "AND cs.cash_in_encashment_id = #{encId} AND cs.stat_date = #{statDate} ")
+	@ResultType(Integer.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> getCashInStatus(@Param("atmId") Integer atmId, @Param("encId") Integer encId,
+			@Param("statDate") Date statDate);
+	
+	@ConstructorArgs({
+		@Arg(column = "STATE", javaType = String.class),
+		@Arg(column = "CITY", javaType = String.class),
+		@Arg(column = "STREET", javaType = String.class),
+		@Arg(column = "NAME", javaType = String.class)
+	})
+	@ResultType(FullAddressItem.class)
+	@Select("SELECT i.street, i.city, i.state, i.name FROM T_CM_ATM i WHERE 1=1 AND i.atm_ID = #{atmId}")
+	FullAddressItem getAtmAddressAndName(@Param("atmId") Integer atmId);
+	
+	@ConstructorArgs({
+		@Arg(column = "EXTERNAL_ATM_ID", javaType = String.class),
+		@Arg(column = "NAME", javaType = String.class)
+	})
+	@ResultType(Pair.class)
+	@Select("SELECT i.external_atm_id, i.name FROM T_CM_ATM i WHERE 1=1 AND i.atm_ID = #{atmId}")
+	Pair getAtmExtIdAndName(@Param("atmId") Integer atmId);
+	
+	@ConstructorArgs({
+		@Arg(column = "NAME", javaType = String.class),
+		@Arg(column = "DESCRIPTION", javaType = String.class)
+	})
+	@ResultType(Pair.class)
+	@Select("SELECT i.name,i.description FROM T_CM_ATM_GROUP i WHERE 1=1 AND i.ID = #{atmId}")
+	Pair getAtmGroupNameAndDescx(@Param("atmId") Integer atmId);
+
+	@Insert("INSERT INTO T_CM_TEMP_ATM_LIST VALUES(#{value})")
+	void insertTempAtms(@Param("value") Integer value);
+	
+	@Delete("DELETE FROM T_CM_TEMP_ATM_LIST ")
+	void deleteTempAtms();
+	
+	@Insert("INSERT INTO T_CM_TEMP_ATM_GROUP_LIST VALUES(#{value})")
+	void insertTempAtmGroups(@Param("value") Integer value);
+	
+	@Insert("INSERT INTO T_CM_TEMP_ATM_GROUP_LIST VALUES(#{item})")
+	void insertTempAtmGroupsIds(@Param("item") Integer item);
+
+	@Delete("DELETE FROM T_CM_TEMP_ATM_GROUP_LIST ")
+	void deleteTempAtmGroups();
 }
