@@ -1,6 +1,7 @@
 package ru.bpc.cm.config.utils;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.apache.ibatis.session.SqlSession;
 
@@ -14,6 +15,19 @@ public class ORMUtils {
 			return "nextval('" + seqName + "')";
 		} else {
 			throw new SQLException();
+		}
+	}
+
+	public static String getLimitToFirstRowExpression(SqlSession session) {
+		String DbName = getDbName(session);
+		if (DbName == "Oracle") {
+			return " where rownum = 1 ";
+		} else if (DbName == "DB2") {
+			return " where rownum = 1 ";
+		} else if (DbName == "PostgreSQL") {
+			return " limit 1 ";
+		} else {
+			return " where rownum = 1 ";
 		}
 	}
 
@@ -51,6 +65,36 @@ public class ORMUtils {
 			return "";
 		} else {
 			throw new SQLException();
+		}
+	}
+
+	public static void createTemporaryTableIfNotExists(SqlSession session, String tableName) throws SQLException {
+		String DbName = getDbName(session);
+		String tempSql;
+		String signature = "";
+		if (DbName == "PostgreSQL") {
+			if (tableName.equalsIgnoreCase("t_cm_temp_atm_group_list")) {
+				signature = "id NUMERIC(9)";
+			} else if (tableName.equalsIgnoreCase("t_cm_temp_atm_list")) {
+				signature = "id NUMERIC(9)";
+			} else if (tableName.equalsIgnoreCase("t_cm_temp_enc_plan_curr")) {
+				signature = "enc_plan_id NUMERIC(6) NOT NULL," + " curr_code NUMERIC(3) NOT NULL,"
+						+ " curr_summ NUMERIC(15) NOT NULL";
+			} else if (tableName.equalsIgnoreCase("t_cm_temp_enc_plan_denom")) {
+				signature = "enc_plan_id NUMERIC(6) NOT NULL," + " denom_value NUMERIC(6) NOT NULL,"
+						+ " denom_count NUMERIC(4) NOT NULL," + " denom_curr NUMERIC(3) NOT NULL";
+
+			} else if (tableName.equalsIgnoreCase("t_cm_temp_enc_plan")) {
+				signature = "enc_plan_id NUMERIC(6) NOT NULL," + " atm_id NUMERIC(9) NOT NULL,"
+						+ " date_forthcoming_encashment TIMESTAMP";
+			} else if (tableName.equalsIgnoreCase("t_cm_temp_enc_report")) {
+				signature = "remaining NUMERIC(15) NOT NULL," + " curr_code VARCHAR(7) NOT NULL,"
+						+ " stat_date TIMESTAMP," + " end_of_stats_date NUMERIC(1)";
+			}
+			tempSql = "CREATE TEMPORARY TABLE IF NOT EXISTS " + tableName + " (" + signature + ") "
+					+ " ON COMMIT DELETE ROWS";
+			Statement stmt = session.getConnection().createStatement();
+			stmt.executeUpdate(tempSql);
 		}
 	}
 }
