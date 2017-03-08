@@ -14,14 +14,12 @@ import ru.bpc.cm.utils.db.QueryConstructor;
 public class AtmActualStateBuilder {
 
 	public String builderQueryCheckLoadedBalances(Map<String, Object> params) {
-		Integer threshhold = (Integer) params.get("threshhold");
 		@SuppressWarnings("unchecked")
 		List<Integer> atmList = (List<Integer>) params.get("atmList");
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ATM_ID, CASS_TYPE, CASS_NUMBER, CASS_REMAINING_LOAD, CASS_REMAINING_CALC "
 				+ "from t_cm_intgr_cass_balance "
-				+ "WHERE abs(COALESCE(CASS_REMAINING_LOAD,0) - COALESCE(CASS_REMAINING_CALC,0)) > ");
-		sb.append(threshhold);
+				+ "WHERE abs(COALESCE(CASS_REMAINING_LOAD,0) - COALESCE(CASS_REMAINING_CALC,0)) > #{threshhold}");
 		sb.append(" AND BALANCE_STATUS <> 1 and ");
 		sb.append(JdbcUtils.generateInConditionNumber("atm_id", atmList));
 		sb.append(" ORDER BY ATM_ID, CASS_TYPE, CASS_NUMBER");
@@ -120,5 +118,24 @@ public class AtmActualStateBuilder {
 		} catch (SQLException e) {
 			throw new RuntimeException("Can't create valid query", e);
 		}
+	}
+	
+	public String getAtmDeviceStateBuilder_limit(Map<String, Object> params) {
+		String limit = (String) params.get("limit");
+		return "SELECT ATM_STATE FROM T_CM_ATM_ACTUAL_STATE WHERE ATM_ID = #{atmId} " + limit;
+	}
+	
+	public String getCashOutHoursFromLastWithdrawalBuilder_limit(Map<String, Object> params) {
+		String limit = (String) params.get("limit");
+		return "select t1.stat_date AS STAT_DATE, t2.cass_count " + "from (select atm_id, max(stat_date) as stat_date "
+				+ "from T_CM_CASHOUT_CASS_STAT where cass_count<>0 group by atm_id) t1, T_CM_CASHOUT_CASS_STAT t2 "
+				+ "where t1.atm_id=t2.atm_id and t1.stat_date=t2.stat_date and t1.atm_id = #{atmId} " + limit;
+	}
+	
+	public String getCashInHoursFromLastAdditionBuilder_limit(Map<String, Object> params) {
+		String limit = (String) params.get("limit");
+		return "select t1.stat_date AS STAT_DATE, t2.bills_count " + "from (select atm_id, max(stat_date) as stat_date "
+				+ "from T_CM_CASHIN_STAT where bills_count<>0 group by atm_id) t1, T_CM_CASHIN_STAT t2 "
+				+ "where t1.atm_id=t2.atm_id and t1.stat_date=t2.stat_date and t1.atm_id= #{atmId} " + limit;
 	}
 }

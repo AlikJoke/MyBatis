@@ -19,6 +19,8 @@ import ru.bpc.cm.cashmanagement.orm.handlers.AtmCassetteInResultHandler;
 import ru.bpc.cm.cashmanagement.orm.handlers.AtmCassetteOutResultHandler;
 import ru.bpc.cm.cashmanagement.orm.items.BalanceItem;
 import ru.bpc.cm.cashmanagement.orm.items.CodesItem;
+import ru.bpc.cm.cashmanagement.orm.items.ObjectWrapper;
+import ru.bpc.cm.config.utils.ORMUtils;
 import ru.bpc.cm.filters.MonitoringFilter;
 import ru.bpc.cm.forecasting.anyatm.items.AnyAtmForecast;
 import ru.bpc.cm.forecasting.anyatm.items.Currency;
@@ -127,7 +129,10 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		int res = 0;
 		try {
-			res = session.getMapper(getMapperClass()).getCashOutHoursFromLastWithdrawal(atmId);
+			ObjectWrapper<Integer> wrapper = session.getMapper(getMapperClass())
+					.getCashOutHoursFromLastWithdrawal(atmId, ORMUtils.getSingleRowExpression(session));
+			if (wrapper.getObject() != null)
+				res = wrapper.getObject();
 		} finally {
 			session.close();
 		}
@@ -138,7 +143,10 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		int res = 0;
 		try {
-			res = session.getMapper(getMapperClass()).getCashInHoursFromLastAddition(atmId);
+			ObjectWrapper<Integer> wrapper = session.getMapper(getMapperClass()).getCashInHoursFromLastAddition(atmId,
+					ORMUtils.getSingleRowExpression(session));
+			if (wrapper.getObject() != null)
+				res = wrapper.getObject();
 		} finally {
 			session.close();
 		}
@@ -418,7 +426,7 @@ public class ActualStateController {
 					mapper.updateAtmActualState(new Timestamp(new Date().getTime()), forecast.getAtmId());
 			}
 		} finally {
-			session.commit();
+			//session.commit();
 			session.close();
 		}
 	}
@@ -429,7 +437,7 @@ public class ActualStateController {
 		try {
 			session.getMapper(getMapperClass()).updateInitialsForAtm(cashInVolume, rejectVolume, cashInRVolume, atmId);
 		} finally {
-			session.commit();
+			//session.commit();
 			session.close();
 		}
 	}
@@ -449,8 +457,11 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			cassList.addAll(session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId, atmId,
-					new AtmCassetteOutResultHandler()));
+			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId, atmId,
+					new AtmCassetteOutResultHandler());
+			for (AtmCassetteItem cassette : cassettes)
+				cassette.setType(AtmCassetteType.CASH_OUT_CASS);
+			cassList.addAll(cassettes);
 		} finally {
 			session.close();
 		}
@@ -460,8 +471,11 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			cassList.addAll(session.getMapper(getMapperClass()).getCashInRecyclingCassettes(cashInEcnashmentId, atmId,
-					new AtmCassetteInResultHandler()));
+			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashInRecyclingCassettes(cashInEcnashmentId, atmId,
+					new AtmCassetteInResultHandler());
+			for (AtmCassetteItem cassette : cassettes)
+				cassette.setType(AtmCassetteType.CASH_IN_R_CASS);
+			cassList.addAll(cassettes);
 		} finally {
 			session.close();
 		}
@@ -485,7 +499,7 @@ public class ActualStateController {
 			}
 			mapper.deleteAtmCassettes(atmId);
 		} finally {
-			session.commit();
+			//session.commit();
 			session.close();
 		}
 	}
@@ -498,7 +512,7 @@ public class ActualStateController {
 			mapper.updateCalculatedRemainingForAtms2(AtmCassetteType.CASH_IN_CASS.getId());
 			mapper.updateCalculatedRemainingForAtms3(AtmCassetteType.CASH_IN_R_CASS.getId());
 		} finally {
-			session.commit();
+			//session.commit();
 			session.close();
 		}
 	}
@@ -550,7 +564,8 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		Integer atmState = null;
 		try {
-			atmState = session.getMapper(getMapperClass()).getAtmDeviceState(atmId);
+			atmState = session.getMapper(getMapperClass()).getAtmDeviceState(atmId,
+					ORMUtils.getSingleRowExpression(session));
 			if (atmState != null)
 				return atmState == 0;
 		} catch (Exception e) {

@@ -9,31 +9,30 @@ import java.util.Date;
 
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
-import org.apache.poi.hssf.record.formula.functions.T;
 
 import ru.bpc.cm.utils.CmUtils;
 
-public class ObjectPairHandler implements TypeHandler<T> {
+public class ObjectPairHandler implements TypeHandler<Date> {
 
 	@Override
-	public void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException {
+	public void setParameter(PreparedStatement ps, int i, Date parameter, JdbcType jdbcType) throws SQLException {
 		// while nothing
 	}
 
 	@Override
-	public T getResult(ResultSet rs, String columnName) throws SQLException {
+	public Date getResult(ResultSet rs, String columnName) throws SQLException {
 		Timestamp arg = rs.getTimestamp(columnName);
-		return T.class.cast(CmUtils.getNVLValue(arg, CmUtils.truncateDateToHours(new Date())));
+		return CmUtils.getNVLValue(arg, CmUtils.truncateDateToHours(new Date()));
 	}
 
 	@Override
-	public T getResult(ResultSet rs, int columnIndex) throws SQLException {
+	public Date getResult(ResultSet rs, int columnIndex) throws SQLException {
 		Timestamp arg = rs.getTimestamp(columnIndex);
-		return T.class.cast(CmUtils.getNVLValue(arg, CmUtils.truncateDateToHours(new Date())));
+		return CmUtils.getNVLValue(arg, CmUtils.truncateDateToHours(new Date()));
 	}
 
 	@Override
-	public T getResult(CallableStatement cs, int columnIndex) throws SQLException {
+	public Date getResult(CallableStatement cs, int columnIndex) throws SQLException {
 		// while nothing
 		return null;
 	}

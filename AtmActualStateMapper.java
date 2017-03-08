@@ -23,6 +23,7 @@ import ru.bpc.cm.cashmanagement.orm.handlers.ObjectPairHandler;
 import ru.bpc.cm.cashmanagement.orm.handlers.PbClassHandler;
 import ru.bpc.cm.cashmanagement.orm.items.BalanceItem;
 import ru.bpc.cm.cashmanagement.orm.items.CodesItem;
+import ru.bpc.cm.cashmanagement.orm.items.ObjectWrapper;
 import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.filters.MonitoringFilter;
 import ru.bpc.cm.items.monitoring.AtmActualStateItem;
@@ -188,29 +189,30 @@ public interface AtmActualStateMapper extends IMapper {
 	@Options(useCache = true, fetchSize = 1000)
 	List<CodesItem> getCurrenciesList(@Param("atmId") int atmId);
 	
-	@ConstructorArgs({
-			@Arg(column = "stat_date", typeHandler = ObjectPairHandler.class, javaType = Date.class),
-			@Arg(column = "enc_id", javaType = Integer.class)
+	@Results({
+			@Result(column = "stat_date", property = "key", typeHandler = ObjectPairHandler.class, javaType = Date.class),
+			@Result(column = "enc_id", property = "value", javaType = Integer.class)
 	})
 	@Select("select max(stat_date) as stat_date,max(encashment_id) as enc_id " + "from T_CM_CASHOUT_CASS_STAT "
 			+ "where atm_id = #{atmId}")
 	ObjectPair<Date, Integer> getCashOutLastStat(@Param("atmId") int atmId);
 	
-	@Result(column = "stat_date", javaType = Integer.class, typeHandler = CachOutHoursFromLastWithdrawalHandler.class)
-	@Select("select t1.stat_date, t2.cass_count " + "from (select atm_id, max(stat_date) as stat_date "
-			+ "from T_CM_CASHOUT_CASS_STAT where cass_count<>0 group by atm_id) t1, T_CM_CASHOUT_CASS_STAT t2 "
-			+ "where t1.atm_id=t2.atm_id and t1.stat_date=t2.stat_date and t1.atm_id = #{atmId}")
-	int getCashOutHoursFromLastWithdrawal(@Param("atmId") int atmId);
-	
-	@Result(column = "stat_date", javaType = Integer.class, typeHandler = CachOutHoursFromLastWithdrawalHandler.class)
-	@Select("select t1.stat_date, t2.bills_count " + "from (select atm_id, max(stat_date) as stat_date "
-			+ "from T_CM_CASHIN_STAT where bills_count<>0 group by atm_id) t1, T_CM_CASHIN_STAT t2 "
-			+ "where t1.atm_id=t2.atm_id and t1.stat_date=t2.stat_date and t1.atm_id= #{atmId}")
-	int getCashInHoursFromLastAddition(@Param("atmId") int atmId);
-	
-	@ConstructorArgs({
-		@Arg(column = "stat_date", javaType = Date.class),
-		@Arg(column = "enc_id", javaType = Integer.class)
+	@Results({
+		@Result(column = "stat_date", property = "object", typeHandler = CachOutHoursFromLastWithdrawalHandler.class)
+	})
+	@SelectProvider(type = AtmActualStateBuilder.class, method = "getCashOutHoursFromLastWithdrawalBuilder_limit")
+	ObjectWrapper<Integer> getCashOutHoursFromLastWithdrawal(@Param("atmId") int atmId,
+			@Param("limit") String limit);
+
+	@Results({
+		@Result(column = "stat_date", property = "object", typeHandler = CachOutHoursFromLastWithdrawalHandler.class)
+	})
+	@SelectProvider(type = AtmActualStateBuilder.class, method = "getCashInHoursFromLastAdditionBuilder_limit")
+	ObjectWrapper<Integer> getCashInHoursFromLastAddition(@Param("atmId") int atmId, @Param("limit") String limit);
+
+	@Results({
+		@Result(column = "stat_date", property = "key", javaType = Date.class),
+		@Result(column = "enc_id", property = "value", javaType = Integer.class)
 	})
 	@Select("select max(stat_date) as stat_date,max(encashment_id) as enc_id " + "from T_CM_CASHOUT_CASS_STAT "
 			+ "where atm_id = #{atmId}")
@@ -218,16 +220,16 @@ public interface AtmActualStateMapper extends IMapper {
 	
 	@Result(column = "vcheck", javaType = Integer.class)
 	@Select("SELECT count(1) as vcheck " + "FROM T_CM_ATM_ACTUAL_STATE " + "where atm_id = #{atmId} ")
-	int getVCheck(@Param("atmId") int atmId);
+	Integer getVCheck(@Param("atmId") int atmId);
 	
 	@Insert(" INSERT INTO T_CM_ATM_ACTUAL_STATE (ATM_ID, CASH_OUT_STAT_DATE,CASH_OUT_ENCASHMENT_ID, "
 			+ "CASH_IN_STAT_DATE,CASH_IN_ENCASHMENT_ID, LAST_UPDATE,"
 			+ "OUT_OF_CASH_OUT_DATE,OUT_OF_CASH_OUT_CURR,OUT_OF_CASH_OUT_RESP,"
 			+ "OUT_OF_CASH_IN_DATE,OUT_OF_CASH_IN_RESP, LAST_WITHDRAWAL_HOURS,LAST_ADDITION_HOURS,"
-			+ "CURR_REMAINING_ALERT) VALUES (#{atmId}, #{cashOutStatDate}, #{cashOutStat}, #{cashInStatDate}, "
-			+ "#{cashInStat}, #{currTime}, #{outOfCashOutDate}, #{outOfCashOutCurr}, #{outOfCashOutResp}, "
-			+ "#{outOfCashInDate}, #{outOfCashInResp}, #{cashOutHoursFromLastWithdrawal}, "
-			+ "#{cashInHoursFromLastAddition}, #{needCurrRemainingAlert})")
+			+ "CURR_REMAINING_ALERT) VALUES (#{atmId}, #{cashOutStatDate, jdbcType=TIMESTAMP}, #{cashOutStat, jdbcType=NUMERIC}, #{cashInStatDate, jdbcType=TIMESTAMP}, "
+			+ "#{cashInStat}, #{currTime, jdbcType=NUMERIC}, #{outOfCashOutDate, jdbcType=TIMESTAMP}, #{outOfCashOutCurr, jdbcType=NUMERIC}, #{outOfCashOutResp, jdbcType=NUMERIC}, "
+			+ "#{outOfCashInDate}, #{outOfCashInResp, jdbcType=NUMERIC}, #{cashOutHoursFromLastWithdrawal, jdbcType=NUMERIC}, "
+			+ "#{cashInHoursFromLastAddition, jdbcType=NUMERIC}, #{needCurrRemainingAlert, jdbcType=NUMERIC})")
 	void insertAtmActualStateItem(@Param("atmId") int atmId, @Param("cashOutStatDate") Timestamp cashOutStatDate,
 			@Param("cashOutStat") Integer cashOutStat, @Param("cashInStatDate") Timestamp cashInStatDate,
 			@Param("cashInStat") Integer cashInStat, @Param("currTime") Timestamp currTime,
@@ -246,11 +248,11 @@ public interface AtmActualStateMapper extends IMapper {
 			+ "SEC2_CURR_CI_LAST_THREE_HOURS, " + "SEC2_CURR_CO_LAST_THREE_HOURS) " + "SEC3_CURR_CI, "
 			+ "SEC3_CURR_CO, " + "SEC3_CURR_CI_LAST_HOUR_DIFF, " + "SEC3_CURR_CO_LAST_HOUR_DIFF, "
 			+ "SEC3_CURR_CI_LAST_THREE_HOURS, " + "SEC3_CURR_CO_LAST_THREE_HOURS) "
-			+ "VALUES (#{atmId}, #{avgStatRecInCurrLastHourDemand}, #{avgStatOutLastHourDemand}, #{mainCurrInDifference}, "
-			+ "#{mainCurrOutDifference}, #{avgStatRecInCurrLastThreeHoursDemand}, #{avgStatOutLastThreeHoursDemand}, #{secCurr1}, #{secCurr2}, "
-			+ "#{secCurrInDifference}, #{secCurrOutDifference}, #{secCurr3}, #{secCurr4}, #{sec2Curr1}, #{sec2Curr2}, "
-			+ "#{sec2CurrInDifference}, #{sec2CurrOutDifference}, #{sec2Curr3}, #{sec2Curr4}, #{sec3Curr1}, #{sec3Curr2}, "
-			+ "#{sec3CurrInDifference}, #{sec3CurrOutDifference}, #{sec3Curr3}, #{sec3Curr4})")
+			+ "VALUES (#{atmId}, #{avgStatRecInCurrLastHourDemand, jdbcType=NUMERIC}, #{avgStatOutLastHourDemand, jdbcType=NUMERIC}, #{mainCurrInDifference, jdbcType=NUMERIC}, "
+			+ "#{mainCurrOutDifference, jdbcType=NUMERIC}, #{avgStatRecInCurrLastThreeHoursDemand, jdbcType=NUMERIC}, #{avgStatOutLastThreeHoursDemand, jdbcType=NUMERIC}, #{secCurr1, jdbcType=NUMERIC}, #{secCurr2, jdbcType=NUMERIC}, "
+			+ "#{secCurrInDifference, jdbcType=NUMERIC}, #{secCurrOutDifference, jdbcType=NUMERIC}, #{secCurr3, jdbcType=NUMERIC}, #{secCurr4, jdbcType=NUMERIC}, #{sec2Curr1, jdbcType=NUMERIC}, #{sec2Curr2, jdbcType=NUMERIC}, "
+			+ "#{sec2CurrInDifference, jdbcType=NUMERIC}, #{sec2CurrOutDifference, jdbcType=NUMERIC}, #{sec2Curr3, jdbcType=NUMERIC}, #{sec2Curr4, jdbcType=NUMERIC}, #{sec3Curr1, jdbcType=NUMERIC}, #{sec3Curr2, jdbcType=NUMERIC}, "
+			+ "#{sec3CurrInDifference, jdbcType=NUMERIC}, #{sec3CurrOutDifference, jdbcType=NUMERIC}, #{sec3Curr3, jdbcType=NUMERIC}, #{sec3Curr4, jdbcType=NUMERIC})")
 	void insertAtmAvgDemand(@Param("atmId") int atmId,
 			@Param("avgStatRecInCurrLastHourDemand") Double avgStatRecInCurrLastHourDemand,
 			@Param("avgStatOutLastHourDemand") Double avgStatOutLastHourDemand,
@@ -271,11 +273,11 @@ public interface AtmActualStateMapper extends IMapper {
 			@Param("sec3Curr4") Double sec3Curr4);
 	
 	@Update(" UPDATE T_CM_ATM_ACTUAL_STATE "
-			+ "SET CASH_OUT_STAT_DATE = #{cashOutStatDate}, CASH_OUT_ENCASHMENT_ID = #{cashOutStat}, "
-			+ "CASH_IN_STAT_DATE = #{cashInStatDate}, CASH_IN_ENCASHMENT_ID = #{cashInStat}, OUT_OF_CASH_OUT_DATE = #{outOfCashOutCurrDate}, "
-			+ "OUT_OF_CASH_OUT_CURR = #{outOfCashOutCurr}, OUT_OF_CASH_OUT_RESP = #{outOfCashOutResp}, "
-			+ "OUT_OF_CASH_IN_DATE = #{outOfCashInDate}, "
-			+ "OUT_OF_CASH_IN_RESP = #{outOfCashInResp}, LAST_WITHDRAWAL_HOURS = #{cashOutHoursFromLastWithdrawal}, LAST_ADDITION_HOURS = #{cashInHoursFromLastAddition}, "
+			+ "SET CASH_OUT_STAT_DATE = #{cashOutStatDate}, CASH_OUT_ENCASHMENT_ID = #{cashOutStat, jdbcType=NUMERIC}, "
+			+ "CASH_IN_STAT_DATE = #{cashInStatDate, jdbcType=TIMESTAMP}, CASH_IN_ENCASHMENT_ID = #{cashInStat, jdbcType=NUMERIC}, OUT_OF_CASH_OUT_DATE = #{outOfCashOutCurrDate, jdbcType=TIMESTAMP}, "
+			+ "OUT_OF_CASH_OUT_CURR = #{outOfCashOutCurr, jdbcType=NUMERIC}, OUT_OF_CASH_OUT_RESP = #{outOfCashOutResp, jdbcType=NUMERIC}, "
+			+ "OUT_OF_CASH_IN_DATE = #{outOfCashInDate, jdbcType=TIMESTAMP}, "
+			+ "OUT_OF_CASH_IN_RESP = #{outOfCashInResp, jdbcType=NUMERIC}, LAST_WITHDRAWAL_HOURS = #{cashOutHoursFromLastWithdrawal, jdbcType=NUMERIC}, LAST_ADDITION_HOURS = #{cashInHoursFromLastAddition, jdbcType=NUMERIC}, "
 			+ "CURR_REMAINING_ALERT = #{needCurrRemainingAlert} WHERE atm_id = #{atmId} ")
 	void updateAtmActualStateItem(@Param("cashOutStatDate") Timestamp cashOutStatDate,
 			@Param("cashOutStat") Integer cashOutStat, @Param("cashInStatDate") Timestamp cashInStatDate,
@@ -286,15 +288,15 @@ public interface AtmActualStateMapper extends IMapper {
 			@Param("cashInHoursFromLastAddition") Integer cashInHoursFromLastAddition,
 			@Param("needCurrRemainingAlert") Boolean needCurrRemainingAlert, @Param("atmId") Integer atmId);
 	
-	@Update(" UPDATE T_CM_ATM_AVG_DEMAND SET MAIN_CURR_CI = #{mainCurr1}, MAIN_CURR_CO = #{mainCurr2}, "
-			+ "MAIN_CURR_CI_LAST_HOUR_DIFF = #{mainCurr3}, MAIN_CURR_CO_LAST_HOUR_DIFF = #{mainCurr4}, "
-			+ "MAIN_CURR_CI_LAST_THREE_HOURS = #{mainCurr5}, MAIN_CURR_CO_LAST_THREE_HOURS = #{mainCurr6}, SEC_CURR_CI = #{secCurr1}, "
-			+ "SEC_CURR_CO = #{secCurr2}, SEC_CURR_CI_LAST_HOUR_DIFF = #{secCurr3}, SEC_CURR_CO_LAST_HOUR_DIFF = #{secCurr4}, "
-			+ "SEC_CURR_CI_LAST_THREE_HOURS = #{secCurr5}, SEC_CURR_CO_LAST_THREE_HOURS = #{secCurr6}, SEC2_CURR_CI = #{sec2Curr1}, "
-			+ "SEC2_CURR_CO = #{sec2Curr2}, SEC2_CURR_CI_LAST_HOUR_DIFF = #{sec2Curr3}, SEC2_CURR_CO_LAST_HOUR_DIFF = #{sec2Curr4}, "
-			+ "SEC2_CURR_CI_LAST_THREE_HOURS = #{sec2Curr5}, SEC2_CURR_CO_LAST_THREE_HOURS = #{sec2Curr6}, SEC3_CURR_CI = #{sec3Curr1}, "
-			+ "SEC3_CURR_CO = #{sec3Curr2}, SEC3_CURR_CI_LAST_HOUR_DIFF = #{sec3Curr3}, SEC3_CURR_CO_LAST_HOUR_DIFF = #{sec3Curr4}, "
-			+ "SEC3_CURR_CI_LAST_THREE_HOURS = #{sec3Curr5}, SEC3_CURR_CO_LAST_THREE_HOURS = #{sec3Curr6} "
+	@Update(" UPDATE T_CM_ATM_AVG_DEMAND SET MAIN_CURR_CI = #{mainCurr1, jdbcType=NUMERIC}, MAIN_CURR_CO = #{mainCurr2, jdbcType=NUMERIC}, "
+			+ "MAIN_CURR_CI_LAST_HOUR_DIFF = #{mainCurr3, jdbcType=NUMERIC}, MAIN_CURR_CO_LAST_HOUR_DIFF = #{mainCurr4, jdbcType=NUMERIC}, "
+			+ "MAIN_CURR_CI_LAST_THREE_HOURS = #{mainCurr5, jdbcType=NUMERIC}, MAIN_CURR_CO_LAST_THREE_HOURS = #{mainCurr6, jdbcType=NUMERIC}, SEC_CURR_CI = #{secCurr1, jdbcType=NUMERIC}, "
+			+ "SEC_CURR_CO = #{secCurr2, jdbcType=NUMERIC}, SEC_CURR_CI_LAST_HOUR_DIFF = #{secCurr3, jdbcType=NUMERIC}, SEC_CURR_CO_LAST_HOUR_DIFF = #{secCurr4, jdbcType=NUMERIC}, "
+			+ "SEC_CURR_CI_LAST_THREE_HOURS = #{secCurr5, jdbcType=NUMERIC}, SEC_CURR_CO_LAST_THREE_HOURS = #{secCurr6, jdbcType=NUMERIC}, SEC2_CURR_CI = #{sec2Curr1, jdbcType=NUMERIC}, "
+			+ "SEC2_CURR_CO = #{sec2Curr2, jdbcType=NUMERIC}, SEC2_CURR_CI_LAST_HOUR_DIFF = #{sec2Curr3, jdbcType=NUMERIC}, SEC2_CURR_CO_LAST_HOUR_DIFF = #{sec2Curr4, jdbcType=NUMERIC}, "
+			+ "SEC2_CURR_CI_LAST_THREE_HOURS = #{sec2Curr5, jdbcType=NUMERIC}, SEC2_CURR_CO_LAST_THREE_HOURS = #{sec2Curr6, jdbcType=NUMERIC}, SEC3_CURR_CI = #{sec3Curr1, jdbcType=NUMERIC}, "
+			+ "SEC3_CURR_CO = #{sec3Curr2, jdbcType=NUMERIC}, SEC3_CURR_CI_LAST_HOUR_DIFF = #{sec3Curr3, jdbcType=NUMERIC}, SEC3_CURR_CO_LAST_HOUR_DIFF = #{sec3Curr4, jdbcType=NUMERIC}, "
+			+ "SEC3_CURR_CI_LAST_THREE_HOURS = #{sec3Curr5, jdbcType=NUMERIC}, SEC3_CURR_CO_LAST_THREE_HOURS = #{sec3Curr6, jdbcType=NUMERIC} "
 			+ "WHERE atm_id = #{atmId} ")
 	void updateAtmAvgDemand(@Param("mainCurr1") Double mainCurr1, @Param("mainCurr2") Double mainCurr2,
 			@Param("mainCurr3") Double mainCurr3, @Param("mainCurr4") Double mainCurr4,
@@ -316,9 +318,9 @@ public interface AtmActualStateMapper extends IMapper {
 	void updateInitialsForAtm(@Param("cashInVolume") Integer cashInVolume, @Param("rejectVolume") Integer rejectVolume,
 			@Param("cashInRVolume") Integer cashInRVolume, @Param("atmId") Integer atmId);
 
-	@Result(column = "vcheck", javaType = Boolean.class)
+	@Result(column = "vcheck", javaType = Integer.class)
 	@Select("SELECT count(1) as vcheck " + "FROM T_CM_ATM_ACTUAL_STATE")
-	int checkAtmActStateTable();
+	Integer checkAtmActStateTable();
 
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "number", javaType = Integer.class),
@@ -326,7 +328,7 @@ public interface AtmActualStateMapper extends IMapper {
 		@Result(column = "CASS_CURR", property = "curr", javaType = Integer.class)
 	})
 	@Select("SELECT distinct CASS_NUMBER,CASS_VALUE,CASS_CURR " + "FROM T_CM_CASHOUT_CASS_STAT "
-			+ "WHERE encashment_id = #{encId} and atm_id = @{atmId} ")
+			+ "WHERE encashment_id = #{encId} and atm_id = #{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
 	List<AtmCassetteItem> getCashOutCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId,
 			ResultHandler<AtmCassetteItem> handler);
@@ -337,14 +339,15 @@ public interface AtmActualStateMapper extends IMapper {
 		@Result(column = "CASS_CURR", property = "curr", javaType = Integer.class)
 	})
 	@Select("SELECT distinct CASS_NUMBER,CASS_VALUE,CASS_CURR " + "FROM T_CM_CASHOUT_CASS_STAT "
-			+ "WHERE encashment_id = #{encId} and atm_id = @{atmId} ")
+			+ "WHERE encashment_id = #{encId} and atm_id = #{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
 	List<AtmCassetteItem> getCashInRecyclingCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId,
 			ResultHandler<AtmCassetteItem> handler);
 
+	@Result(column = "vcheck", javaType = Integer.class)
 	@Select("SELECT count(1) as vcheck FROM T_CM_ATM_CASSETTES where ATM_ID = #{atmId} "
 			+ "AND CASS_TYPE = #{cassType} AND CASS_NUMBER = #{cassNumber} ")
-	int checkAtmCassettes(@Param("atmId") Integer atmId, @Param("cassType") Integer cassType,
+	Integer checkAtmCassettes(@Param("atmId") Integer atmId, @Param("cassType") Integer cassType,
 			@Param("cassNumber") Integer cassNumber);
 	
 	@Insert(" INSERT INTO T_CM_ATM_CASSETTES (ATM_ID, CASS_TYPE, CASS_NUMBER, CASS_CURR, CASS_VALUE) VALUES "
@@ -412,6 +415,6 @@ public interface AtmActualStateMapper extends IMapper {
 			@Param("atmsList") List<Integer> atmsList);
 
 	@Result(column = "ATM_STATE", javaType = Integer.class)
-	@Select("SELECT ATM_STATE FROM T_CM_ATM_ACTUAL_STATE WHERE ATM_ID = #{atmId} ")
-	Integer getAtmDeviceState(@Param("atmId") Integer atmId);
+	@SelectProvider(type = AtmActualStateBuilder.class, method = "getAtmDeviceStateBuilder_limit")
+	Integer getAtmDeviceState(@Param("atmId") Integer atmId, @Param("limit") String limit);
 }
