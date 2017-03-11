@@ -11,6 +11,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ejbs.cm.svcm.ISessionHolder;
 import ru.bpc.cm.forecasting.anyatm.items.AnyAtmForecast;
 import ru.bpc.cm.forecasting.anyatm.items.Currency;
 import ru.bpc.cm.forecasting.controllers.ForecastCommonController;
@@ -29,7 +30,7 @@ public class NominalsFixedCassForecast {
 
 	private static final Logger logger = LoggerFactory.getLogger("CASH_MANAGEMENT");
 
-	public static void setEncNominals(Connection con, AnyAtmForecast forecast, UserForecastFilter filter)
+	public static void setEncNominals(ISessionHolder sessionHolder, Connection con, AnyAtmForecast forecast, UserForecastFilter filter)
 	throws ForecastException {
 		
 		int atmId = forecast.getAtmId();
@@ -52,7 +53,7 @@ public class NominalsFixedCassForecast {
 			nominals = mainCurr.getNominals();
 			if(cashAddEnabled){
 				mainCurr.setEncSummForCurr(prepareNominalsForCashAddCalculation
-						(con, nominals, atmId, forecast.getCoEncId(), forecast.getStartDate(), 
+						(sessionHolder, con, nominals, atmId, forecast.getCoEncId(), forecast.getStartDate(), 
 								forecast.getForthcomingEncDate(), 
 								mainCurr.getCoCoeffsCalendar(),
 								mainCurr.getEncSummForCurr(),
@@ -98,7 +99,7 @@ public class NominalsFixedCassForecast {
 				nominals = currency.getNominals();
 				if(cashAddEnabled){
 					currency.setEncSummForCurr(prepareNominalsForCashAddCalculation
-							(con, nominals, atmId, forecast.getCoEncId(), forecast.getStartDate(), 
+							(sessionHolder, con, nominals, atmId, forecast.getCoEncId(), forecast.getStartDate(), 
 									forecast.getForthcomingEncDate(), 
 									currency.getCoCoeffsCalendar(), 
 									currency.getEncSummForCurr(),
@@ -137,7 +138,7 @@ public class NominalsFixedCassForecast {
 		nominal.setCountInOneCassPlan((int)(Math.round(count)*100));
 	}
 	
-	public static AnyAtmForecast setEncNominalsPeriod(Connection con, AnyAtmForecast forecast,
+	public static AnyAtmForecast setEncNominalsPeriod(ISessionHolder sessionHolder, Connection con, AnyAtmForecast forecast,
 			Date startDate)
 	throws ForecastException {
 		
@@ -154,7 +155,7 @@ public class NominalsFixedCassForecast {
 		List<NominalItem> nominals = mainCurr.getNominals();
 		if(cashAddEnabled){
 			mainCurr.setEncSummForCurr(prepareNominalsForCashAddCalculationPeriod
-					(con, nominals, atmId, loadType, startDate, forecast.getForthcomingEncDate(), 
+					(sessionHolder, con, nominals, atmId, loadType, startDate, forecast.getForthcomingEncDate(), 
 							mainCurr.getCoCoeffsCalendar(), mainCurr.getRemaining(),
 							mainCurr.getEncSummForCurr(), maxDenomCount, minDenomCount));
 		}
@@ -176,7 +177,7 @@ public class NominalsFixedCassForecast {
 			nominals = currency.getNominals();
 			if(cashAddEnabled){
 				currency.setEncSummForCurr(prepareNominalsForCashAddCalculationPeriod
-						(con, nominals, atmId, loadType, startDate, forecast.getForthcomingEncDate(), 
+						(sessionHolder, con, nominals, atmId, loadType, startDate, forecast.getForthcomingEncDate(), 
 								currency.getCoCoeffsCalendar(), currency.getRemaining(),
 								currency.getEncSummForCurr(), maxDenomCount, minDenomCount));
 			}
@@ -202,21 +203,21 @@ public class NominalsFixedCassForecast {
 		return forecast;
 	}
 	
-	private static double prepareNominalsForCashAddCalculation(Connection con, List<NominalItem> nominals, 
+	private static double prepareNominalsForCashAddCalculation(ISessionHolder sessionHolder, Connection con, List<NominalItem> nominals, 
 			int atmId, int lastEncId,
 			Date startDate, Date forthcomingEncDate, 
 			Map<Date, Double> calendarDaysMapForecast,
 			double currSummCalc, int dayStart, int dayEnd){
 		for (NominalItem nominal : nominals) {
 			double averageDemand = ForecastNominalsController.
-					getAvgDenomDemandStat(con, atmId, startDate, nominal.getCurrency(), nominal.getDenom(), dayStart, dayEnd);
+					getAvgDenomDemandStat(sessionHolder, atmId, startDate, nominal.getCurrency(), nominal.getDenom(), dayStart, dayEnd);
 			nominal.setAverageDemand(averageDemand);
-			double remaining = ForecastNominalsController.getDenomRemaining(con, atmId, nominal.getCurrency(), lastEncId, startDate, nominal.getDenom());
+			double remaining = ForecastNominalsController.getDenomRemaining(sessionHolder, atmId, nominal.getCurrency(), lastEncId, startDate, nominal.getDenom());
 			nominal.setRemainingOnEncDate(new Double(Math.max(remaining 
 					- ForecastCommonUtils.calculateCurrencyTakeOffForPeriod
-						(con, averageDemand, atmId, startDate, 
+						(sessionHolder, averageDemand, atmId, startDate, 
 								ForecastCommonController
-									.getPeriodAvailableDates(forthcomingEncDate, startDate, con, atmId), calendarDaysMapForecast),0)).intValue());
+									.getPeriodAvailableDates(sessionHolder, forthcomingEncDate, startDate, atmId), calendarDaysMapForecast),0)).intValue());
 			nominal.setMaxCountInOneCass(Math.max(nominal.getMaxCountInOneCass()-nominal.getRemainingOnEncDate()/nominal.getCassCount(),0));
 			nominal.setMinCountInOneCass(Math.max(nominal.getMinCountInOneCass()-nominal.getRemainingOnEncDate()/nominal.getCassCount(),0));
 			
@@ -226,7 +227,7 @@ public class NominalsFixedCassForecast {
 	}
 	
 	private static double prepareNominalsForCashAddCalculationPeriod(
-			Connection con, List<NominalItem> nominals, 
+			ISessionHolder sessionHolder, Connection con, List<NominalItem> nominals, 
 			int atmId, int loadType,
 			Date startDate, Date forthcomingEncDate, 
 			Map<Date, Double> calendarDaysMapForecast,
@@ -243,9 +244,9 @@ public class NominalsFixedCassForecast {
 			
 			nominal.setRemainingOnEncDate(new Double(Math.max(remaining 
 					- ForecastCommonUtils.calculateCurrencyTakeOffForPeriod
-						(con, nominal.getAverageDemand(), atmId, startDate, 
+						(sessionHolder, nominal.getAverageDemand(), atmId, startDate, 
 								ForecastCommonController
-									.getPeriodAvailableDates(forthcomingEncDate, startDate, con, atmId), calendarDaysMapForecast),0)).intValue());
+									.getPeriodAvailableDates(sessionHolder, forthcomingEncDate, startDate, atmId), calendarDaysMapForecast),0)).intValue());
 			nominal.setMaxCountInOneCass(Math.max(nominal.getMaxCountInOneCass()-nominal.getRemainingOnEncDate()/nominal.getCassCount(),0));
 			nominal.setMinCountInOneCass(Math.max(nominal.getMinCountInOneCass()-nominal.getRemainingOnEncDate()/nominal.getCassCount(),0));
 			

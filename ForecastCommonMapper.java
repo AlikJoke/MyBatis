@@ -33,7 +33,7 @@ public interface ForecastCommonMapper extends IMapper {
 			+ "left outer join T_CM_ATM_GROUP_ATTR aga on (agr.atm_group_id = aga.atm_group_id) where 1=1 "
 			+ "AND aga.attr_id > #{attrId} AND ag.type_id = #{groupId} "
 			+ "AND agr.ATM_ID = #{atmId} ORDER BY aga.attr_id")
-	ObjectPair<Double, String> getEncCostPercents(@Param("attrId") Integer attrId, @Param("groupId") Integer groupId,
+	List<ObjectPair<Double, String>> getEncCostPercents(@Param("attrId") Integer attrId, @Param("groupId") Integer groupId,
 			@Param("atmId") Integer atmId);
 	
 	@ConstructorArgs({
@@ -45,7 +45,7 @@ public interface ForecastCommonMapper extends IMapper {
 			+ "FROM T_CM_ENC_PLAN WHERE 1=1 AND DATE_FORTHCOMING_ENCASHMENT >  #{startDate} "
 			+ "AND DATE_FORTHCOMING_ENCASHMENT <= #{endDate} AND ATM_ID IN (SELECT ATM_ID "
 			+ "FROM T_CM_ATM2ATM_GROUP WHERE ATM_GROUP_ID = #{atmCount}) GROUP BY trunc(DATE_FORTHCOMING_ENCASHMENT) ")
-	ObjectPair<Timestamp, Integer> getEncMapDaysPlan(@Param("startDate") Timestamp startDate,
+	List<ObjectPair<Timestamp, Integer>> getEncMapDaysPlan(@Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("atmCount") Integer atmCount);
 	
 	@ConstructorArgs({
@@ -57,7 +57,7 @@ public interface ForecastCommonMapper extends IMapper {
 			+ "FROM T_CM_ENC_PERIOD WHERE 1=1 AND DATE_FORTHCOMING_ENCASHMENT >  #{startDate} "
 			+ "AND DATE_FORTHCOMING_ENCASHMENT <= #{endDate} AND ATM_ID IN (SELECT ATM_ID "
 			+ "FROM T_CM_ATM2ATM_GROUP WHERE ATM_GROUP_ID = #{atmCount}) GROUP BY trunc(DATE_FORTHCOMING_ENCASHMENT) ")
-	ObjectPair<Timestamp, Integer> getEncMapDaysPeriod(@Param("startDate") Timestamp startDate,
+	List<ObjectPair<Timestamp, Integer>> getEncMapDaysPeriod(@Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("atmCount") Integer atmCount);
 
 	@ConstructorArgs({
@@ -69,7 +69,7 @@ public interface ForecastCommonMapper extends IMapper {
 			+ "FROM T_CM_ENC_COMPARE WHERE 1=1 AND DATE_FORTHCOMING_ENCASHMENT >  #{startDate} "
 			+ "AND DATE_FORTHCOMING_ENCASHMENT <= #{endDate} AND ATM_ID IN (SELECT ATM_ID "
 			+ "FROM T_CM_ATM2ATM_GROUP WHERE ATM_GROUP_ID = #{atmCount}) GROUP BY trunc(DATE_FORTHCOMING_ENCASHMENT) ")
-	ObjectPair<Timestamp, Integer> getEncMapDaysCompare(@Param("startDate") Timestamp startDate,
+	List<ObjectPair<Timestamp, Integer>> getEncMapDaysCompare(@Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("atmCount") Integer atmCount);
 	
 	@Result(column = "DAYS", javaType = Integer.class)

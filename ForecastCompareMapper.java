@@ -1,19 +1,20 @@
 package ru.bpc.cm.forecasting.orm;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.executor.BatchResult;
 
 import ru.bpc.cm.cashmanagement.orm.builders.ForecastCompareBuilder;
 import ru.bpc.cm.config.IMapper;
-import ru.bpc.cm.forecasting.anyatm.items.EncashmentForPeriod;
-import ru.bpc.cm.forecasting.anyatm.items.ForecastForPeriod;
 import ru.bpc.cm.forecasting.controllers.ForecastCompareController;
 
 /**
@@ -36,12 +37,15 @@ public interface ForecastCompareMapper extends IMapper {
 	void deleteCompareData(@Param("atmId") Integer atmId);
 
 	@InsertProvider(type = ForecastCompareBuilder.class, method = "insertCompareDataBuilder")
-	void insertCompareData(@Param("nextSeq") String nextSeq, @Param("encashment") EncashmentForPeriod encashment,
-			@Param("item") ForecastForPeriod item);
+	void insertCompareData(@Param("nextSeq") String nextSeq, @Param("atmId") Integer atmId,
+			@Param("encDate") Timestamp encDate, @Param("encType") Integer encType, @Param("resp") Integer resp,
+			@Param("isExists") Boolean isExists, @Param("isEmergency") Boolean isEmergency,
+			@Param("encLosts") Long encLosts, @Param("encPrice") Long encPrice,
+			@Param("encLostsCurrCode") Integer encLostsCurrCode);
 
 	@Result(column = "SQ", javaType = Integer.class)
 	@SelectProvider(type = ForecastCompareBuilder.class, method = "getPlanIdBuilder")
-	int getPlanId(@Param("currSeq") String currSeq, @Param("from") String from);
+	Integer getPlanId(@Param("currSeq") String currSeq, @Param("from") String from);
 
 	@Insert("Insert into T_CM_ENC_COMPARE_DENOM " + " (ENC_COMPARE_ID, DENOM_CURR, DENOM_COUNT, DENOM_VALUE) "
 			+ " VALUES " + " (#{encPlanId}, #{curr}, #{countInOneCassPlan}, #{denom})")
@@ -68,6 +72,9 @@ public interface ForecastCompareMapper extends IMapper {
 
 	@Select("SELECT COUNT(DISTINCT stat_date) AS cnt FROM t_cm_cashout_curr_stat WHERE atm_id = #{atmId} "
 			+ "AND stat_date > #{startDate} AND stat_date < #{endDate} ")
-	int getStatsDatesCount(@Param("atmId") Integer atmId, @Param("startDate") Timestamp startDate,
+	Integer getStatsDatesCount(@Param("atmId") Integer atmId, @Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate);
+
+	@Flush
+	List<BatchResult> flush();
 }

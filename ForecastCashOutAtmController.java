@@ -2,6 +2,7 @@ package ru.bpc.cm.forecasting.controllers;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
@@ -33,11 +34,11 @@ public class ForecastCashOutAtmController {
 		double res = 0;
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			Double currRemaining = session.getMapper(getMapperClass()).getCurrRemaining(atmId, currency, encID,
+			List<Double> currRemaining = session.getMapper(getMapperClass()).getCurrRemaining(atmId, currency, encID,
 					new Timestamp(startDate.getTime()));
 
-			if (currRemaining != null)
-				res = currRemaining;
+			if (!currRemaining.isEmpty())
+				res = currRemaining.get(0);
 		} catch (Exception e) {
 			logger.error("", e);
 		} finally {

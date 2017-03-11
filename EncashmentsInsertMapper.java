@@ -87,12 +87,14 @@ public interface EncashmentsInsertMapper extends IMapper {
 	@Delete("DELETE FROM T_CM_ENC_PLAN_CURR WHERE ENC_PLAN_ID = #{encPlanId} ")
 	void deleteEncPlanCurr(@Param("encPlanId") Integer encPlanId);
 
-	@Delete("DELETE FROM T_CM_ENC_PLAN_DENOM WHERE ENC_PLAN_ID = #{encPlanId} ")
-	void insertEncPlanDenom(@Param("encPlanId") Integer encPlanId);
+	@Insert("Insert into T_CM_ENC_PLAN_CURR (ENC_PLAN_ID, CURR_CODE, CURR_SUMM, CURR_AVG_DEMAND) VALUES "
+			+ " (#{encPlanId}, #{currCode}, #{countInOneCassPlan}, #{denom})")
+	void insertEncPlanCurr(@Param("encPlanId") Integer encPlanId, @Param("currCode") Integer currCode,
+			@Param("countInOneCassPlan") Long countInOneCassPlan, @Param("denom") Long denom);
 
 	@Insert("Insert into T_CM_ENC_PLAN_DENOM (ENC_PLAN_ID, DENOM_CURR, DENOM_COUNT, DENOM_VALUE) VALUES "
 			+ " (#{encPlanId}, #{currCode}, #{countInOneCassPlan}, #{denom})")
-	void insertEncPlanCurr(@Param("encPlanId") Integer encPlanId, @Param("currCode") Integer currCode,
+	void insertEncPlanDenom(@Param("encPlanId") Integer encPlanId, @Param("currCode") Integer currCode,
 			@Param("countInOneCassPlan") Integer countInOneCassPlan, @Param("denom") Integer denom);
 
 	@Insert("Insert into T_CM_TEMP_ENC_PLAN (ENC_PLAN_ID, ATM_ID, DATE_FORTHCOMING_ENCASHMENT) VALUES (#{encPlanId}, #{atmId}, #{encDate})")

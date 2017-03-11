@@ -5,7 +5,9 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -13,6 +15,7 @@ import org.apache.ibatis.annotations.ResultType;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.executor.BatchResult;
 
 import ru.bpc.cm.cashmanagement.orm.builders.ForecastForPeriodBuilder;
 import ru.bpc.cm.config.IMapper;
@@ -32,6 +35,26 @@ public interface ForecastForPeriodMapper extends IMapper {
 	@Results({
 		@Result(column = "code_a3", property = "currCodeA3", javaType = String.class),
 		@Result(column = "curr_remaining", property = "crRemainingEndDay", javaType = Integer.class),
+		@Result(column = "take_off", property = "crSummTakeOff", javaType = Long.class),
+		@Result(column = "stat_Date", property = "statDate", javaType = Timestamp.class),
+		@Result(column = "RNK", property = "rnk", javaType = Integer.class),
+		@Result(column = "CNT", property = "cnt", javaType = Integer.class),
+		@Result(column = "CURR_REMAINING", property = "summEncFromAtm", javaType = Long.class)
+	})
+	@Select("select cs.ATM_ID,cs.STAT_DATE,cc.CODE_A3, "
+			+ "cs.CURR_SUMM as TAKE_OFF, cs.CURR_REMAINING as CURR_REMAINING, "
+			+ "dense_rank() over(partition by cs.STAT_DATE order by cs.ENCASHMENT_ID) as RNK, "
+			+ "count(1) over(partition by cs.STAT_DATE) as CNT from t_cm_cashout_curr_stat cs "
+			+ "join t_cm_curr cc on (cc.code_n3 = cs.CURR_CODE) where cs.atm_id = #{atmId} AND cs.stat_Date > #{startDate} "
+			+ " AND cs.stat_Date <= #{endDate} AND cs.CURR_CODE = #{currCode} order by cs.stat_Date ")
+	@Options(useCache = true, fetchSize = 1000)
+	@ResultType(AtmCurrStatItem.class)
+	List<AtmCurrStatItem> getCoStatDetailsCurr(@Param("atmId") Integer atmId, @Param("startDate") Date startDate,
+			@Param("endDate") Timestamp endDate, @Param("currCode") Integer currCode);
+	
+	@Results({
+		@Result(column = "code_a3", property = "currCodeA3", javaType = String.class),
+		@Result(column = "curr_remaining", property = "crRemainingEndDay", javaType = Integer.class),
 		@Result(column = "take_in", property = "crSummInsert", javaType = Long.class),
 		@Result(column = "take_off", property = "crSummTakeOff", javaType = Long.class),
 		@Result(column = "stat_Date", property = "statDate", javaType = Timestamp.class),
@@ -43,8 +66,8 @@ public interface ForecastForPeriodMapper extends IMapper {
 			+ "cs.CURR_SUMM_IN as TAKE_IN, cs.CURR_SUMM_OUT as TAKE_OFF, cs.CURR_REMAINING as CURR_REMAINING, "
 			+ "dense_rank() over(partition by cs.STAT_DATE order by cs.CASH_IN_ENCASHMENT_ID) as RNK, "
 			+ "count(1) over(partition by cs.STAT_DATE) as CNT from t_cm_cashin_r_curr_stat cs "
-			+ "join t_cm_curr cc on (cc.code_n3 = cs.CURR_CODE) where cs.atm_id = ? AND cs.stat_Date > ? "
-			+ " AND cs.stat_Date <= ? AND cs.CURR_CODE = ? order by cs.stat_Date ")
+			+ "join t_cm_curr cc on (cc.code_n3 = cs.CURR_CODE) where cs.atm_id =#{atmId} AND cs.stat_Date > #{startDate} "
+			+ " AND cs.stat_Date <= #{endDate} AND cs.CURR_CODE = #{currCode} order by cs.stat_Date ")
 	@Options(useCache = true, fetchSize = 1000)
 	@ResultType(AtmCurrStatItem.class)
 	List<AtmCurrStatItem> getCrStatDetailsCurr(@Param("atmId") Integer atmId, @Param("startDate") Date startDate,
@@ -57,13 +80,13 @@ public interface ForecastForPeriodMapper extends IMapper {
 		@Result(column = "stat_Date", property = "statDate", javaType = Timestamp.class),
 		@Result(column = "RNK", property = "rnk", javaType = Integer.class),
 		@Result(column = "CNT", property = "cnt", javaType = Integer.class),
-		@Result(column = "CURR_REMAINING", property = "ciRemainingEndDay", javaType = Long.class)
+		@Result(column = "CURR_REMAINING", property = "summEncFromAtm", javaType = Long.class)
 	})
 	@ResultType(AtmCurrStatItem.class)
 	@SelectProvider(type = ForecastForPeriodBuilder.class, method = "getStatDetailsCashInBuilder")
 	@Options(useCache = true, fetchSize = 1000)
 	List<AtmCurrStatItem> getStatDetailsCashIn(@Param("atmId") Integer atmId, @Param("startDate") Date startDate,
-			@Param("endDate") Timestamp endDate);
+			@Param("endDate") Timestamp endDate, @Param("encIds") List<Integer> encIds);
 
 	@Result(column = "CASH_IN_ENCASHMENT_ID", javaType = Integer.class)
 	@Select("SELECT DISTINCT CASH_IN_ENCASHMENT_ID FROM T_CM_CASHIN_STAT WHERE STAT_DATE > #{statDate} and ATM_ID = #{atmId}")
@@ -74,7 +97,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 	@Select("select COALESCE(CASH_OUT_STAT_DATE,CASH_IN_STAT_DATE) as stat_date from T_CM_ATM_ACTUAL_STATE "
 			+ "where atm_id = #{atmId} ")
 	@ResultType(Timestamp.class)
-	Date getStatsEnd(@Param("atmId") Integer atmId);
+	Timestamp getStatsEnd(@Param("atmId") Integer atmId);
 
 	@Delete("DELETE FROM T_CM_ENC_PERIOD_DENOM WHERE ENC_PERIOD_ID IN (SELECT ID FROM T_CM_ENC_PERIOD WHERE ATM_ID = #{atmId} )")
 	void insertPeriodForecastData_deletePeriodDenom(@Param("atmId") Integer atmId);
@@ -88,9 +111,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 	@Delete("DELETE FROM T_CM_ENC_PERIOD WHERE ATM_ID = #{atmId} )")
 	void insertPeriodForecastData_deletePeriod(@Param("atmId") Integer atmId);
 	
-	@Insert("Insert into T_CM_ENC_PERIOD (ID, ATM_ID, DATE_FORTHCOMING_ENCASHMENT,  "
-			+ " ENCASHMENT_TYPE, FORECAST_RESP_CODE, CASH_IN_EXISTS, EMERGENCY_ENCASHMENT) VALUES "
-			+ " (#{nextSeq}, #{atmId}, #{forthcomingEncDate}, #{encTypeId}, #{forecastResp}, #{isCashInExists}, #{isEmergencyEncashment})")
+	@InsertProvider(type = ForecastForPeriodBuilder.class, method = "insertPeriodForecastData_insertPeriod")
 	void insertPeriodForecastData_insertPeriod(@Param("nextSeq") String nextSeq, @Param("atmId") Integer atmId,
 			@Param("forthcomingEncDate") Timestamp forthcomingEncDate, @Param("encTypeId") Integer encTypeId,
 			@Param("forecastResp") Integer forecastResp, @Param("isCashInExists") Boolean isCashInExists,
@@ -113,7 +134,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 			+ " (#{atmId},#{statDate},#{currNodeN3},#{coSummTakeOff},#{coRemainingStartDay},#{coRemainingEndDay},"
 			+ "#{summEncToAtm},#{summEncFromAtm},#{isEmergencyEncashment},#{isForecast},#{isCashAddEncashment},#{ciSummInsert},"
 			+ "#{ciRemainingStartDay},#{ciRemainingEndDay},#{crSummInsert},#{crSummTakeOff},#{crRemainingStartDay},#{crRemainingEndDay}) ")
-	void insertPeriodForecastData_insertPeriodStat(@Param("atmId") Integer atmId, @Param("statDate") Timestamp statDate,
+	void insertPeriodForecastData_insertPeriodStat(@Param("atmId") Integer atmId, @Param("statDate") Long statDate,
 			@Param("currNodeN3") Integer currNodeN3, @Param("coSummTakeOff") Long coSummTakeOff,
 			@Param("coRemainingStartDay") Long coRemainingStartDay, @Param("coRemainingEndDay") Long coRemainingEndDay,
 			@Param("summEncToAtm") Long summEncToAtm, @Param("summEncFromAtm") Long summEncFromAtm,
@@ -122,4 +143,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 			@Param("ciRemainingStartDay") Long ciRemainingStartDay, @Param("ciRemainingEndDay") Long ciRemainingEndDay,
 			@Param("crSummInsert") Long crSummInsert, @Param("crSummTakeOff") Long crSummTakeOff,
 			@Param("crRemainingStartDay") Long crRemainingStartDay, @Param("crRemainingEndDay") Long crRemainingEndDay);
+
+	@Flush
+	List<BatchResult> flush();
 }

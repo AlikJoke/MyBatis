@@ -20,4 +20,11 @@ public class ForecastForPeriodBuilder {
 				+ "order by cs.STAT_DATE,cs.CASH_IN_ENCASHMENT_ID");
 		return sql.toString();
 	}
+	
+	public String insertPeriodForecastData_insertPeriod(Map<String, Object> params) {
+		String nextSeq = (String) params.get("nextSeq");
+		return "Insert into T_CM_ENC_PERIOD (ID, ATM_ID, DATE_FORTHCOMING_ENCASHMENT,  "
+				+ " ENCASHMENT_TYPE, FORECAST_RESP_CODE, CASH_IN_EXISTS, EMERGENCY_ENCASHMENT) VALUES " + " (" + nextSeq
+				+ ", #{atmId}, #{forthcomingEncDate}, #{encTypeId}, #{forecastResp}, #{isCashInExists}, #{isEmergencyEncashment})";
+	}
 }

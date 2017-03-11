@@ -9,6 +9,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ejbs.cm.svcm.ISessionHolder;
 import ru.bpc.cm.cashmanagement.CmCommonController;
 import ru.bpc.cm.constants.CashManagementConstants;
 import ru.bpc.cm.forecasting.anyatm.EncashmentForecast;
@@ -34,12 +35,12 @@ public class ForecastManager {
 	private static final Logger logger = LoggerFactory
 			.getLogger("CASH_MANAGEMENT");
 	
-	public static void makeForecast(Connection con, List<IFilterItem<Integer>> filterList, boolean useMainCurr) {
+	public static void makeForecast(ISessionHolder sessionHolder, Connection con, List<IFilterItem<Integer>> filterList, boolean useMainCurr) {
 		try {
 			Date startDate = new Date();
 			List<ObjectPair<Integer,List<EncashmentType>>> tmpList = new ArrayList<ObjectPair<Integer,List<EncashmentType>>>();
 		
-			tmpList = EncashmentsInsertController.checkExistingEncashments(con,
+			tmpList = EncashmentsInsertController.checkExistingEncashments(sessionHolder,
 					filterList);
 			for (ObjectPair<Integer,List<EncashmentType>> item : tmpList) {
 				int atmId = item.getKey();
@@ -54,7 +55,7 @@ public class ForecastManager {
 				
 				AnyAtmForecast forecast = null;
 				try{
-					forecast = EncashmentForecast.makeForecastForAtm(con, atmId, startDate, null, ForecastingMode.PLAN, missingEncType, true, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
+					forecast = EncashmentForecast.makeForecastForAtm(sessionHolder, con, atmId, startDate, null, ForecastingMode.PLAN, missingEncType, true, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
 				} catch (ForecastException e) {
 					logger.error("atmID = " + atmId, e);
 					forecast = ForecastBuilder.getBlankAtmForecast();
@@ -66,7 +67,7 @@ public class ForecastManager {
 					logger.error("", e);
 				}
 				Integer existingPlanId = EncashmentsInsertController.getExistingPlanId(
-						con, atmId);
+						sessionHolder, atmId);
 				if(existingPlanId!=0) {
 					forecast.setEncPlanID(existingPlanId);
 				}
@@ -74,14 +75,14 @@ public class ForecastManager {
 				if (forecast.getEncType() == EncashmentType.NOT_NEEDED){
 					List<Integer> deleteList = new ArrayList<Integer>();
 					deleteList.add(forecast.getEncPlanID());
-					int routeId = EncashmentsInsertController.getRouteIdForEnc(con, forecast);
-					EncashmentsInsertController.deleteEncashments(con, deleteList);
-					EncashmentsInsertController.updateRoute(con, routeId);
+					int routeId = EncashmentsInsertController.getRouteIdForEnc(sessionHolder, forecast);
+					EncashmentsInsertController.deleteEncashments(sessionHolder, deleteList);
+					EncashmentsInsertController.updateRoute(sessionHolder, routeId);
 				} else {
-					int routeId = EncashmentsInsertController.getRouteIdForEnc(con, forecast);
-					EncashmentsInsertController.ensureRouteConsistencyForEnc(con, forecast, missingEncType, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
-					EncashmentsInsertController.insertForecastData(con, forecast);
-					EncashmentsInsertController.updateRoute(con, routeId);
+					int routeId = EncashmentsInsertController.getRouteIdForEnc(sessionHolder, forecast);
+					EncashmentsInsertController.ensureRouteConsistencyForEnc(sessionHolder, forecast, missingEncType, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
+					EncashmentsInsertController.insertForecastData(sessionHolder, forecast);
+					EncashmentsInsertController.updateRoute(sessionHolder, routeId);
 				}
 				
 			}
@@ -90,13 +91,13 @@ public class ForecastManager {
 		}
 	}
 	
-	public static void makeForecastForSimpleList(Connection con,
+	public static void makeForecastForSimpleList(ISessionHolder sessionHolder, Connection con,
 			List<Integer> atmList, boolean useMainCurr) {
 		try {
 			Date startDate = new Date();
 			List<ObjectPair<Integer,List<EncashmentType>>> tmpList = new ArrayList<ObjectPair<Integer,List<EncashmentType>>>();
 		
-			tmpList = EncashmentsInsertController.checkExistingEncashmentsForSimpleList(con,
+			tmpList = EncashmentsInsertController.checkExistingEncashmentsForSimpleList(sessionHolder,
 					atmList);
 			for (ObjectPair<Integer,List<EncashmentType>> item : tmpList) {
 				int atmId = item.getKey();
@@ -111,7 +112,7 @@ public class ForecastManager {
 				
 				AnyAtmForecast forecast = null;
 				try{
-					forecast = EncashmentForecast.makeForecastForAtm(con, atmId, startDate, null, ForecastingMode.PLAN, missingEncType, true, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
+					forecast = EncashmentForecast.makeForecastForAtm(sessionHolder, con, atmId, startDate, null, ForecastingMode.PLAN, missingEncType, true, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
 				} catch (ForecastException e) {
 					logger.error("atmID = " + atmId, e);
 					forecast = ForecastBuilder.getBlankAtmForecast();
@@ -123,7 +124,7 @@ public class ForecastManager {
 					logger.error("", e);
 				}
 				Integer existingPlanId = EncashmentsInsertController.getExistingPlanId(
-						con, atmId);
+						sessionHolder, atmId);
 				if(existingPlanId!=0) {
 					forecast.setEncPlanID(existingPlanId);
 				}
@@ -131,14 +132,14 @@ public class ForecastManager {
 				if (forecast.getEncType() == EncashmentType.NOT_NEEDED){
 					List<Integer> deleteList = new ArrayList<Integer>();
 					deleteList.add(forecast.getEncPlanID());
-					int routeId = EncashmentsInsertController.getRouteIdForEnc(con, forecast);
-					EncashmentsInsertController.deleteEncashments(con, deleteList);
-					EncashmentsInsertController.updateRoute(con, routeId);
+					int routeId = EncashmentsInsertController.getRouteIdForEnc(sessionHolder, forecast);
+					EncashmentsInsertController.deleteEncashments(sessionHolder, deleteList);
+					EncashmentsInsertController.updateRoute(sessionHolder, routeId);
 				} else {
-					int routeId = EncashmentsInsertController.getRouteIdForEnc(con, forecast);
-					EncashmentsInsertController.ensureRouteConsistencyForEnc(con, forecast, missingEncType, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
-					EncashmentsInsertController.insertForecastData(con, forecast);
-					EncashmentsInsertController.updateRoute(con, routeId);
+					int routeId = EncashmentsInsertController.getRouteIdForEnc(sessionHolder, forecast);
+					EncashmentsInsertController.ensureRouteConsistencyForEnc(sessionHolder, forecast, missingEncType, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
+					EncashmentsInsertController.insertForecastData(sessionHolder, forecast);
+					EncashmentsInsertController.updateRoute(sessionHolder, routeId);
 				}
 				
 			}
@@ -147,7 +148,7 @@ public class ForecastManager {
 		}
 	}
 	
-	public static void makeForecastForPerticularDate(Connection con, List<IFilterItem<Integer>> filterList, Date startDate, boolean useMainCurr) {
+	public static void makeForecastForPerticularDate(ISessionHolder sessionHolder, Connection con, List<IFilterItem<Integer>> filterList, Date startDate, boolean useMainCurr) {
 		try {
 			// List<ForecastItem> forecastList = new ArrayList<ForecastItem>();
 			UserForecastFilter filter = new UserForecastFilter();
@@ -168,7 +169,7 @@ public class ForecastManager {
 					logger.debug("Forecast for date, atmId = {}",atmId);
 				}
 				try{
-					forecast = EncashmentForecast.makeForecastForAtm(con, atmId, new Date(), filter, 
+					forecast = EncashmentForecast.makeForecastForAtm(sessionHolder, con, atmId, new Date(), filter, 
 							ForecastingMode.PLAN, EncashmentType.CASH_IN_AND_CASH_OUT, false, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
 				} catch (ForecastException e) {
 					logger.error("atmID = " + atmId, e);
@@ -180,18 +181,18 @@ public class ForecastManager {
 				} catch (Exception e) {
 					logger.error("", e);
 				}
-				EncashmentsInsertController.insertForecastDataForParticularDate(con, forecast, ++encPlanId);
+				EncashmentsInsertController.insertForecastDataForParticularDate(sessionHolder, forecast, ++encPlanId);
 			}
 		} catch (Exception e) {
 			logger.error("", e);
 		}
 	}
 	
-	public static AnyAtmForecast makeForecastForPeriod(Connection connection,
+	public static AnyAtmForecast makeForecastForPeriod(ISessionHolder sessionHolder, Connection connection,
 			AnyAtmForecast forecast, Date startDate, Date finishDate,ForecastingMode forecastingMode, EncashmentType encType, boolean useMainCurr) {
 		try {
 			forecast = EncashmentForecast.
-					makeForecastForPeriodForAtm(connection, forecast, startDate, finishDate, encType, ForecastingMode.PERIOD, useMainCurr);
+					makeForecastForPeriodForAtm(sessionHolder, connection, forecast, startDate, finishDate, encType, ForecastingMode.PERIOD, useMainCurr);
 		} catch (ForecastException e) {
 			logger.error("atmID = " + forecast.getAtmId(), e);
 			forecast.setForecastResp(e.getCode());
@@ -200,11 +201,11 @@ public class ForecastManager {
 		return forecast;
 	}
 
-	public static void makeForecastForSingleAtm(Connection con,
+	public static void makeForecastForSingleAtm(ISessionHolder sessionHolder, Connection con,
 			UserForecastFilter filter, int personID, boolean useMainCurr) {
 		try {
 			Date startDate = new Date(); 
-			List<EncashmentType> approvedEncList = EncashmentsInsertController.checkExistingEncashments(con, filter);
+			List<EncashmentType> approvedEncList = EncashmentsInsertController.checkExistingEncashments(sessionHolder, filter);
 			EncashmentType missingEncType = EncashmentType.getMissingEncashmentType(approvedEncList);
 			
 			if (missingEncType != EncashmentType.NOT_NEEDED) {
@@ -215,7 +216,7 @@ public class ForecastManager {
 					logger.debug("Forecast for one ATM, atmId = {}",atmId);
 				}
 				try{
-					forecast = EncashmentForecast.makeForecastForAtm(con, atmId, startDate, filter, 
+					forecast = EncashmentForecast.makeForecastForAtm(sessionHolder, con, atmId, startDate, filter, 
 							ForecastingMode.PLAN, missingEncType, false, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
 
 				} catch (ForecastException e) {
@@ -231,7 +232,7 @@ public class ForecastManager {
 				forecast.setPersonID(personID);
 				
 				Integer existingPlanId = EncashmentsInsertController.getExistingPlanId(
-						con, atmId);
+						sessionHolder, atmId);
 				if(existingPlanId!=0) {
 					forecast.setEncPlanID(existingPlanId);
 				}
@@ -239,14 +240,14 @@ public class ForecastManager {
 				if (forecast.getEncType() == EncashmentType.NOT_NEEDED){
 					List<Integer> deleteList = new ArrayList<Integer>();
 					deleteList.add(forecast.getEncPlanID());
-					int routeId = EncashmentsInsertController.getRouteIdForEnc(con, forecast);
-					EncashmentsInsertController.deleteEncashments(con, deleteList);
-					EncashmentsInsertController.updateRoute(con, routeId);
+					int routeId = EncashmentsInsertController.getRouteIdForEnc(sessionHolder, forecast);
+					EncashmentsInsertController.deleteEncashments(sessionHolder, deleteList);
+					EncashmentsInsertController.updateRoute(sessionHolder, routeId);
 				} else {
-					int routeId = EncashmentsInsertController.getRouteIdForEnc(con, forecast);
-					EncashmentsInsertController.ensureRouteConsistencyForEnc(con, forecast, missingEncType, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
-					EncashmentsInsertController.insertForecastData(con, forecast);
-					EncashmentsInsertController.updateRoute(con, routeId);
+					int routeId = EncashmentsInsertController.getRouteIdForEnc(sessionHolder, forecast);
+					EncashmentsInsertController.ensureRouteConsistencyForEnc(sessionHolder, forecast, missingEncType, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
+					EncashmentsInsertController.insertForecastData(sessionHolder, forecast);
+					EncashmentsInsertController.updateRoute(sessionHolder, routeId);
 				}
 				
 			}
@@ -255,7 +256,7 @@ public class ForecastManager {
 		}
 	}
 
-	public static void makeForecastForPeriod(Connection con,
+	public static void makeForecastForPeriod(ISessionHolder sessionHolder, Connection con,
 			List<IFilterItem<Integer>> filterList, Date endDate, boolean useMainCurr) {
 		try {
 			Date startDate = new Date();
@@ -266,7 +267,7 @@ public class ForecastManager {
 					logger.debug("Forecast for period, atmId = {}",atmId);
 				}
 				try{
-					forecast = EncashmentForecast.makeForecastForAtm(con, atmId, startDate, null, 
+					forecast = EncashmentForecast.makeForecastForAtm(sessionHolder, con, atmId, startDate, null, 
 							ForecastingMode.PERIOD, EncashmentType.CASH_IN_AND_CASH_OUT, false, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
 				} catch (ForecastException e) {
 					logger.error("atmID = " + atmId, e);
@@ -277,10 +278,10 @@ public class ForecastManager {
 					continue;
 				}
 				ForecastForPeriod periodForecast = EncashmentsForPeriodForecast
-						.makeStatForecast(con, forecast, startDate, endDate, 
+						.makeStatForecast(sessionHolder, con, forecast, startDate, endDate, 
 								CashManagementConstants.PERIOD_FORECAST_STATS_PERIOD,
 								ForecastingMode.PERIOD,  useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
-				ForecastForPeriodController.insertPeriodForecastData(con,
+				ForecastForPeriodController.insertPeriodForecastData(sessionHolder,
 						periodForecast);
 			}
 		} catch (Exception e) {
@@ -288,7 +289,7 @@ public class ForecastManager {
 		}
 	}
 	
-	public static void makeForecastForCompare(Connection con,
+	public static void makeForecastForCompare(ISessionHolder sessionHolder, Connection con,
 			List<IFilterItem<Integer>> filterList, boolean useMainCurr) {
 		try {
 			int	 				atmId;
@@ -303,7 +304,7 @@ public class ForecastManager {
 				if(logger.isDebugEnabled()){
 					logger.debug("Forecast for compare, atmId = {}",atmId);
 				}
-				endDate = ForecastForPeriodController.getStatsEnd(con, atmId, Calendar.getInstance().getTime());
+				endDate = ForecastForPeriodController.getStatsEnd(sessionHolder, atmId, Calendar.getInstance().getTime());
 				
 				if(logger.isDebugEnabled()){
 					logger.debug("statsEnd = {]",endDate);
@@ -314,7 +315,7 @@ public class ForecastManager {
 				startDateCal.add(Calendar.MONTH, -CashManagementConstants.COMPARE_STATS_ENOUGH_PERIOD_MONTH);
 				startDate = startDateCal.getTime();
 				
-				int statsCount = ForecastCompareController.getStatsDatesCount(con, atmId, startDate, endDate);
+				int statsCount = ForecastCompareController.getStatsDatesCount(sessionHolder, atmId, startDate, endDate);
 				
 				
 				if(statsCount >= 0){
@@ -327,7 +328,7 @@ public class ForecastManager {
 					
 					atmId = item.getValue();
 					try{
-						forecast = EncashmentForecast.makeForecastForAtm(con, atmId, startDate, null, 
+						forecast = EncashmentForecast.makeForecastForAtm(sessionHolder, con, atmId, startDate, null, 
 								ForecastingMode.COMPARE, EncashmentType.CASH_IN_AND_CASH_OUT, false, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
 					} catch (ForecastException e) {
 						logger.error("atmID = " + atmId, e);
@@ -338,10 +339,10 @@ public class ForecastManager {
 						continue;
 					}
 					periodForecast = EncashmentsForPeriodForecast
-							.makeStatForecast(con, forecast, startDate, endDate, 
+							.makeStatForecast(sessionHolder, con, forecast, startDate, endDate, 
 									CashManagementConstants.COMPARE_FORECAST_STATS_PERIOD,
 									ForecastingMode.COMPARE, useMainCurr ? CmCommonController.getMainCurrEnabled(con, atmId) : false);
-					ForecastCompareController.insertCompareForecastData(con,
+					ForecastCompareController.insertCompareForecastData(sessionHolder,
 							periodForecast);
 				}
 				

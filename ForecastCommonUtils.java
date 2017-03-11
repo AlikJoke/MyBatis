@@ -1,6 +1,5 @@
 package ru.bpc.cm.forecasting;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -8,15 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ejbs.cm.svcm.ISessionHolder;
 import ru.bpc.cm.forecasting.controllers.ForecastCommonController;
 import ru.bpc.cm.items.forecast.ForecastStatDay;
 
 public class ForecastCommonUtils {
 	
-	protected static double calculateCurrencyTakeOffForPeriod(Connection con,
+	protected static double calculateCurrencyTakeOffForPeriod(ISessionHolder sessionHolder,
 			double averageDemandWithCoeffs, int atmId, Date startDate,
 			int period, Map<Date, Double> calendarDayMapForecast) {
-		Map<Date, ForecastStatDay> dayMapForecast = getDayMapForecast(con,
+		Map<Date, ForecastStatDay> dayMapForecast = getDayMapForecast(sessionHolder,
 				startDate, atmId, period, averageDemandWithCoeffs);
 		return getTakeOffForecast(dayMapForecast, calendarDayMapForecast);
 	}
@@ -53,10 +53,10 @@ public class ForecastCommonUtils {
 	}
 	
 	private static Map<Date, ForecastStatDay> getDayMapForecast(
-			Connection con, Date startDate, int atmId, int period,
+			ISessionHolder sessionHolder, Date startDate, int atmId, int period,
 			double takeOffAverage) {
 		List<Date> days = new ArrayList<Date>(
-				ForecastCommonController.getAtmAvailableDaysForecast(con,
+				ForecastCommonController.getAtmAvailableDaysForecast(sessionHolder,
 						atmId, period, startDate, null));
 		Map<Date, ForecastStatDay> forecastDayMap = new HashMap<Date, ForecastStatDay>();
 		for (Date date : days) {
