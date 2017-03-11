@@ -23,6 +23,6 @@ public interface ForecastCashOutAtmMapper extends IMapper {
 	@Select("SELECT CURR_REMAINING AS SUMM FROM V_CM_CASHOUT_CURR_ACT_REM WHERE ATM_ID = #{atmId} AND "
 			+ " CURR_CODE = #{curr} AND ENCASHMENT_ID = #{encId} AND STAT_DATE <= #{startDate} "
 			+ " ORDER BY STAT_DATE desc,ENCASHMENT_ID desc")
-	double getCurrRemaining(@Param("atmId") Integer atmId, @Param("curr") Integer curr, @Param("encId") Integer encId,
+	Double getCurrRemaining(@Param("atmId") Integer atmId, @Param("curr") Integer curr, @Param("encId") Integer encId,
 			@Param("startDate") Timestamp startDate);
 }

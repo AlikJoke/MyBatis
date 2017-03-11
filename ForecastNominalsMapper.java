@@ -62,7 +62,7 @@ public interface ForecastNominalsMapper extends IMapper {
 	@SelectProvider(type = ForecastNominalsBuilder.class, method = "getCoCurrNominalsFromAtmCassettesBuilder_count")
 	@Options(useCache = true, fetchSize = 1000)
 	@ResultType(NominalCountItem.class)
-	List<NominalCountItem> getCoCurrNominalsFromAtmCassettes_count(@Param("encList") List<Integer> encList,
+	NominalCountItem getCoCurrNominalsFromAtmCassettes_count(@Param("encList") List<Integer> encList,
 			@Param("curr") Integer curr, @Param("atmId") Integer atmId, @Param("denom") Integer denom);
 	
 	@Results({
@@ -84,7 +84,7 @@ public interface ForecastNominalsMapper extends IMapper {
 	@SelectProvider(type = ForecastNominalsBuilder.class, method = "getCrCurrNominalsFromAtmCassettesBuilder_count")
 	@Options(useCache = true, fetchSize = 1000)
 	@ResultType(NominalCountItem.class)
-	List<NominalCountItem> getCrCurrNominalsFromAtmCassettes_count(@Param("encList") List<Integer> encList,
+	NominalCountItem getCrCurrNominalsFromAtmCassettes_count(@Param("encList") List<Integer> encList,
 			@Param("curr") Integer curr, @Param("atmId") Integer atmId, @Param("denom") Integer denom);
 
 	@Result(column = "SUMM", javaType = Double.class)

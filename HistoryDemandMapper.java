@@ -7,14 +7,17 @@ import java.util.List;
 import org.apache.ibatis.annotations.Arg;
 import org.apache.ibatis.annotations.ConstructorArgs;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.executor.BatchResult;
 
+import ru.bpc.cm.cashmanagement.orm.builders.HistoryDemandBuilder;
 import ru.bpc.cm.cashmanagement.orm.handlers.DisabledCNTTypeHandler;
 import ru.bpc.cm.cashmanagement.orm.handlers.SqlDateToJavaDateHandler;
 import ru.bpc.cm.cashmanagement.orm.handlers.TimestampToHourTypeHandler;
@@ -40,16 +43,7 @@ public interface HistoryDemandMapper extends IMapper {
 		@Result(column = "FORECASTED_SUMM", property = "forecastedSumm", javaType = Integer.class),
 		@Result(column = "DISABLED_CNT", property = "disabled", typeHandler = DisabledCNTTypeHandler.class, javaType = Boolean.class)
 	})
-	@Select("with st as (select st.atm_id, trunc(st.stat_date) as stat_date, sum(CURR_SUMM) as STAT_SUMM,"
-			+ "st.curr_code from #{statViewName} st where st.ATM_ID = #{atmId} "
-			+ "and st.stat_Date >= #{dateFrom} and st.stat_date < #{dateTo} and st.CURR_CODE = #{curr} "
-			+ "group by st.atm_id,trunc(st.stat_date),st.curr_code) select st.atm_id,st.stat_date,"
-			+ "st.STAT_SUMM, adh.DEMAND as FORECASTED_SUMM, cl.USER_DISABLED as DISABLED_CNT from st "
-			+ "join (select atm_id, trunc(cl_date) as cl_date, currency, currency_mode, sum(demand) as demand  from t_cm_atm_demand_history group by atm_id, trunc(cl_date), currency, currency_mode) adh on "
-			+ "(st.atm_id = adh.atm_id and adh.cl_date = st.stat_date and adh.currency = st.curr_code) "
-			+ "left outer join (select atm_id, trunc(cl_date) as cl_date, currency, currency_mode, MIN(user_disabled) as user_disabled from t_cm_atm_calendar_days group by atm_id, trunc(cl_date), currency, currency_mode) cl on "
-			+ "(cl.atm_id =st.atm_id and cl.cl_date = st.stat_date and cl.CURRENCY_MODE = adh.CURRENCY_MODE "
-			+ "and cl.currency = st.curr_code) where adh.CURRENCY_MODE = #{modeId} " + "order by stat_date")
+	@SelectProvider(type = HistoryDemandBuilder.class, method = "getDemandCompareForAtmBuilder")
 	@Options(useCache = true, fetchSize = 1000)
 	List<DemandCompareItem> getDemandCompareForAtm(@Param("statViewName") String statViewName,
 			@Param("atmId") String atmId, @Param("dateFrom") Date dateFrom, @Param("dateTo") Date dateTo,
@@ -61,14 +55,7 @@ public interface HistoryDemandMapper extends IMapper {
 		@Arg(column = "FORECASTED_SUMM", javaType = Integer.class),
 		@Arg(column = "DISABLED_CNT", typeHandler = DisabledCNTTypeHandler.class, javaType = Boolean.class)
 	})
-	@Select("with st as (select vst.atm_id, vst.stat_date as stat_date, vst.CURR_SUMM as STAT_SUMM, "
-			+ "vst.CURR_CODE as CURR_CODE from #{statViewName} vst where vst.ATM_ID = #{atmId} "
-			+ "and trunc(vst.stat_Date) = #{day} and vst.CURR_CODE = #{curr} ) select st.atm_id,st.stat_date,"
-			+ "st.STAT_SUMM, adh.DEMAND as FORECASTED_SUMM, cl.USER_DISABLED as DISABLED_CNT from st "
-			+ "join t_cm_atm_demand_history adh on (st.atm_id = adh.atm_id and adh.cl_date = st.stat_date "
-			+ "and adh.currency = st.curr_code) left outer join t_cm_atm_calendar_days cl on "
-			+ "(cl.atm_id =st.atm_id and cl.cl_date = st.stat_date and cl.CURRENCY_MODE = adh.CURRENCY_MODE "
-			+ "and cl.currency = st.curr_code) where adh.CURRENCY_MODE = #{modeId} " + "order by stat_date")
+	@SelectProvider(type = HistoryDemandBuilder.class, method = "getDemandHourCompareForAtmBuilder")
 	@Options(useCache = true, fetchSize = 1000)
 	List<HourDemandCompareItem> getDemandHourCompareForAtm(@Param("statViewName") String statViewName,
 			@Param("atmId") String atmId, @Param("day") Date day, @Param("curr") Integer curr,
@@ -92,4 +79,7 @@ public interface HistoryDemandMapper extends IMapper {
 			+ "AND CL_DATE = #{calTime} AND CURRENCY = #{curr} AND CURRENCY_MODE = #{modeId}")
 	void changeAtmCalendarHour(@Param("disabled") Integer disabled, @Param("atmId") String atmId,
 			@Param("calTime") Date calTime, @Param("curr") Integer curr, @Param("modeId") Integer modeId);
+	
+	@Flush
+	List<BatchResult> flush();
 }
