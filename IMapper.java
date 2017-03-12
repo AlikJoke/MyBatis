@@ -1,5 +1,10 @@
 package ru.bpc.cm.config;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Flush;
+import org.apache.ibatis.executor.BatchResult;
+
 /**
  * Интерфейс-маркер, наследовать который должен каждый интерфейс, содержащий
  * маппинг аннотациями MyBatis. Необходимость обусловлена тем, что в противном
@@ -12,4 +17,6 @@ package ru.bpc.cm.config;
  */
 public interface IMapper {
 
+	@Flush
+	List<BatchResult> flush();
 }
