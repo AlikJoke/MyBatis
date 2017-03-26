@@ -8,10 +8,12 @@ import org.apache.ibatis.annotations.Arg;
 import org.apache.ibatis.annotations.ConstructorArgs;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultType;
+import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 
@@ -29,7 +31,7 @@ import ru.bpc.cm.utils.Pair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 24.02.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface CmCommonMapper extends IMapper {
@@ -131,25 +133,25 @@ public interface CmCommonMapper extends IMapper {
 	String getAtmAttribute(@Param("attrId") Integer attrId, @Param("typeId") Integer typeId,
 			@Param("atmId") Integer atmId);
 	
-	@ConstructorArgs({
-		@Arg(column = "ATTR_ID", javaType = Integer.class),
-		@Arg(column = "VALUE", javaType = String.class)
+	@Results({
+		@Result(column = "ATTR_ID", property = "key", javaType = Integer.class),
+		@Result(column = "VALUE", property = "value", javaType = String.class)
 	})
 	@Select("select aga.attr_id ,aga.value from T_CM_ATM2ATM_GROUP agr "
 			+ "join T_CM_ATM_GROUP ag on (ag.id = agr.atm_group_id) left outer join T_CM_ATM_GROUP_ATTR aga on "
 			+ "(agr.atm_group_id = aga.atm_group_id) where 1=1 AND ag.type_id != #{typeId} "
 			+ "AND agr.ATM_ID = #{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
-	ObjectPair<Integer, String> getAtmAttributes(@Param("typeId") Integer typeId, @Param("atmId") Integer atmId);
+	List<ObjectPair<Integer, String>> getAtmAttributes(@Param("typeId") Integer typeId, @Param("atmId") Integer atmId);
 	
-	@ConstructorArgs({ 
-		@Arg(column = "MULTIPLE_FLAG", javaType = String.class),
-		@Arg(column = "CNVT_RATE", javaType = Double.class) 
+	@Results({ 
+		@Result(column = "MULTIPLE_FLAG", property = "key", javaType = String.class),
+		@Result(column = "CNVT_RATE", property = "value", javaType = Double.class) 
 	})
 	@Select("SELECT CNVT_RATE, MULTIPLE_FLAG FROM T_CM_CURR_CONVERT_RATE WHERE DEST_CURR_CODE = #{destCurr} "
 			+ "AND SRC_CURR_CODE = #{srcCurr} AND DEST_INST_ID = #{instId} AND SRC_INST_ID = #{instId} "
 			+ "ORDER BY CNVT_DATE DESC")
-	ObjectPair<String, Double> convertValue(@Param("destCurr") Integer destCurr, @Param("srcCurr") Integer srcCurr,
+	List<ObjectPair<String, Double>> convertValue(@Param("destCurr") Integer destCurr, @Param("srcCurr") Integer srcCurr,
 			@Param("instId") String instId);
 	
 	@ConstructorArgs({ 
@@ -163,9 +165,7 @@ public interface CmCommonMapper extends IMapper {
 	List<ConvertionsRateItem> getConvertionsRates(@Param("atmId") Integer atmId,
 			@Param("currencies") List<Integer> currencies);
 	
-	@Insert("INSERT INTO T_CM_ENC_PLAN_LOG "
-			+ "(ENC_PLAN_ID,LOG_DATE,USER_ID,MESSAGE,MESSAGE_TYPE,LOG_ID,MESSAGE_PARAMS) VALUES "
-			+ "(#{encPlanId},#{currTime},#{personId},#{message},#{logType},#{nextSeq},#{printedCollection})")
+	@InsertProvider(type = CmCommonBuilder.class, method = "insertEncashmentMessage")
 	void insertEncashmentMessage(@Param("nextSeq") String nextSeq, @Param("encPlanId") Integer encPlanId,
 			@Param("currTime") Timestamp currTime, @Param("personId") Integer personId,
 			@Param("message") String message, @Param("logType") Integer logType,
@@ -174,9 +174,9 @@ public interface CmCommonMapper extends IMapper {
 	@Delete("DELETE FROM T_CM_ENC_PLAN_LOG WHERE LOG_ID = #{logId} ")
 	void deleteEncashmentMessage(@Param("logId") Integer logId);
 	
-	@ConstructorArgs({
-		@Arg(column = "CASH_OUT_ENCASHMENT_ID", javaType = Integer.class),
-		@Arg(column = "CASH_OUT_STAT_DATE", javaType = Date.class)
+	@Results({
+		@Result(column = "CASH_OUT_ENCASHMENT_ID", property = "key", javaType = Integer.class),
+		@Result(column = "CASH_OUT_STAT_DATE", property = "value", javaType = Date.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("SELECT CASH_OUT_ENCASHMENT_ID,CASH_OUT_STAT_DATE FROM T_CM_ATM_ACTUAL_STATE WHERE "
@@ -191,9 +191,9 @@ public interface CmCommonMapper extends IMapper {
 	List<Integer> getCashOutStatus(@Param("atmId") Integer atmId, @Param("encId") Integer encId,
 			@Param("statDate") Date statDate);
 	
-	@ConstructorArgs({
-		@Arg(column = "CASH_IN_ENCASHMENT_ID", javaType = Integer.class),
-		@Arg(column = "CASH_IN_STAT_DATE", javaType = Date.class)
+	@Results({
+		@Result(column = "CASH_IN_ENCASHMENT_ID", property = "key", javaType = Integer.class),
+		@Result(column = "CASH_IN_STAT_DATE", property = "value", javaType = Date.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("SELECT CASH_IN_ENCASHMENT_ID,CASH_IN_STAT_DATE FROM T_CM_ATM_ACTUAL_STATE WHERE ATM_ID = #{atmId} ")

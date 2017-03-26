@@ -7,6 +7,13 @@ import ru.bpc.cm.utils.CmUtils;
 
 public class CmCommonBuilder {
 
+	public String insertEncashmentMessage(Map<String, Object> params) {
+		String nextSeq = (String) params.get("nextSeq");
+		return "INSERT INTO T_CM_ENC_PLAN_LOG "
+				+ "(ENC_PLAN_ID,LOG_DATE,USER_ID,MESSAGE,MESSAGE_TYPE,LOG_ID,MESSAGE_PARAMS) VALUES "
+				+ "(#{encPlanId},#{currTime},#{personId},#{message},#{logType}," + nextSeq + ",#{printedCollection})";
+	}
+
 	public String getConvertionsRatesBuilder(Map<String, Object> params) {
 		@SuppressWarnings("unchecked")
 		List<Integer> currencies = (List<Integer>) params.get("currencies");
