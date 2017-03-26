@@ -22,7 +22,7 @@ import ru.bpc.cm.items.monitoring.AtmCassetteItem;
  * 
  * @author Alimurad A. Ramazanov
  * @since 24.02.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface AtmCassettesMapper extends IMapper {
@@ -31,22 +31,23 @@ public interface AtmCassettesMapper extends IMapper {
 			+ "AND CASS_TYPE = #{cassTypeId} ")
 	@Result(column = "CNT", javaType = Integer.class)
 	@Options(useCache = true, statementType = StatementType.PREPARED)
-	int getAtmCassCount(@Param("atmId") int atmId, @Param("cassTypeId") int cassTypeId);
+	Integer getAtmCassCount(@Param("atmId") int atmId, @Param("cassTypeId") int cassTypeId);
 
 	@Select("SELECT ATM_ID, CASS_TYPE, CASS_NUMBER, CASS_CURR, CASS_VALUE FROM T_CM_ATM_CASSETTES WHERE "
 			+ "ATM_ID = #{atmId} ORDER BY CASS_TYPE, CASS_NUMBER")
-	@Results(value = { @Result(property = "number", column = "CASS_NUMBER", id = true),
-			@Result(property = "denom", column = "CASS_VALUE"), @Result(property = "curr", column = "CASS_CURR"),
-			@Result(property = "type", column = "CASS_TYPE", typeHandler = EnumHandler.class, javaType = AtmCassetteType.class) })
+	@Results({ 
+		@Result(property = "number", column = "CASS_NUMBER"),
+		@Result(property = "denom", column = "CASS_VALUE"), 
+		@Result(property = "curr", column = "CASS_CURR"),
+		@Result(property = "type", column = "CASS_TYPE", typeHandler = EnumHandler.class, javaType = AtmCassetteType.class) 
+	})
 	@Options(useCache = true, statementType = StatementType.PREPARED, fetchSize = 1000)
 	List<AtmCassetteItem> getAtmCassettes(@Param("atmId") int atmId);
 
-	@Insert({ "<script>", "insert into mybatis_demo (ATM_ID, CASS_TYPE, CASS_NUMBER, CASS_CURR, CASS_VALUE)", "values ",
-			"<foreach  collection='atmCassList' item='atmCass' separator=';'>",
-			"( #{atmId, jdbcType=VARCHAR}, #{atmCass.type.id, jdbcType = INTEGER}, #{atmCass.number, jdbcType = VARCHAR}, "
-					+ "#{atmCass.curr, jdbcType = VARCHAR}, #{atmCass.number, jdbcType = VARCHAR}, #{atmCass.denom, jdbcType = VARCHAR})",
-			"</foreach>", "</script>" })
-	void saveAtmCassettes(@Param("atmId") int atmId, @Param("atmCassList") List<AtmCassetteItem> atmCassList);
+	@Insert("insert into T_CM_ATM_CASSETTES (ATM_ID, CASS_TYPE, CASS_NUMBER, CASS_CURR, CASS_VALUE) VALUES ( #{atmId}, #{typeId}, #{cassNumber}, "
+			+ "#{curr}, #{denom})")
+	void saveAtmCassettes(@Param("atmId") int atmId, @Param("typeId") Integer typeId, @Param("curr") Integer curr,
+			@Param("cassNumber") Integer cassNumber, @Param("denom") Integer denom);
 
 	@Delete("DELETE FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId}")
 	void deleteAtmCassettes(@Param("atmId") int atmId);

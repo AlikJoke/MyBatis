@@ -5,6 +5,12 @@ import java.util.Map;
 
 public class NotifyMessageBuilder {
 
+	public String insertNotifyMessageBuilder(Map<String, Object> params) {
+		String nextSeq = (String) params.get("nextSeq");
+		return "INSERT INTO t_cm_notification_message (ID,CREATE_DATE,USER_ID,MESSAGE_TYPE,PARAMS,IS_NEW) " + "VALUES ("
+				+ nextSeq + ",#{currTime},#{userId},#{msgId},#{printedCollection},1)";
+	}
+	
 	public String getNotifyMessageListBuilder(Map<String, Object> params) {
 		Boolean newOnly = (Boolean) params.get("newOnly");
 		Integer userId = (Integer) params.get("userId");

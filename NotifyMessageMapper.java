@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Arg;
 import org.apache.ibatis.annotations.ConstructorArgs;
-import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -29,8 +29,7 @@ import ru.bpc.cm.items.cashmanagement.NotifyMessageItem;
  */
 public interface NotifyMessageMapper extends IMapper {
 
-	@Insert("INSERT INTO t_cm_notification_message (ID,CREATE_DATE,USER_ID,MESSAGE_TYPE,PARAMS,IS_NEW) "
-			+ "VALUES (#{nextSeq},#{currTime},#{userId},#{msgId},#{printedCollection},1)")
+	@InsertProvider(type = NotifyMessageBuilder.class, method = "insertNotifyMessageBuilder")
 	void insertNotifyMessage(@Param("nextSeq") String nextSeq, @Param("currTime") Timestamp currTime,
 			@Param("userId") int userId, @Param("msgId") int msgId,
 			@Param("printedCollection") String printedCollection);
