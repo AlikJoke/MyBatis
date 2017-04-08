@@ -34,7 +34,7 @@ public class AtmPidListBuilder {
 		}
 		querConstr.setQueryTail(" ORDER BY ATM_GROUP_NAME, atm_id");
 		String query = querConstr.getQuery();
-		return query.replaceFirst("?", "#{atmIdFilter}").replaceAll("?", "#{nameAndAddressFilter}");
+		return query.replaceFirst("?", "#{atmIdFilter, jdbcType=NUMERIC}").replaceAll("?", "#{nameAndAddressFilter}");
 	}
 
 	public String getAtmListSplitByGroupListDescxBuilder2(Map<String, Object> params) throws SQLException {
@@ -112,6 +112,18 @@ public class AtmPidListBuilder {
 						+ "FROM T_CM_ATM2ATM_GROUP agr " + "join T_CM_ATM ai on (ai.ATM_ID = agr.ATM_ID) "
 						+ "WHERE agr.ATM_GROUP_ID = #{groupId} ");
 		sql.append(CmUtils.getInstListInClause(instList, "a.inst_id"));
+		sql.append(" ORDER BY atm_id ");
+		return sql.toString();
+	}
+	
+	public String getAtmListForGroupBuilder(Map<String, Object> params) {
+		@SuppressWarnings("unchecked")
+		List<Institute> instList = (List<Institute>) params.get("instList");
+		StringBuilder sql = new StringBuilder(
+				"SELECT agr.ATM_ID as ATM_ID,ai.EXTERNAL_ATM_ID,ai.INST_ID,ai.STATE,ai.CITY,ai.STREET,ai.NAME as ATM_NAME "
+						+ "FROM T_CM_ATM2ATM_GROUP agr " + "join T_CM_ATM ai on (ai.ATM_ID = agr.ATM_ID) "
+						+ "WHERE agr.ATM_GROUP_ID = #{groupId} ");
+		sql.append(CmUtils.getInstListInClause(instList, "ai.inst_id"));
 		sql.append(" ORDER BY atm_id ");
 		return sql.toString();
 	}

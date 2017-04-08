@@ -178,6 +178,21 @@ public interface AtmPidListMapper extends IMapper {
 	
 	@ConstructorArgs({
 		@Arg(column = "ATM_ID", javaType = Integer.class),
+		@Arg(column = "ATM_NAME", javaType = String.class),
+		@Arg(column = "CITY", javaType = String.class),
+		@Arg(column = "STREET", javaType = String.class),
+		@Arg(column = "STATE", javaType = String.class),
+		@Arg(column = "INST_ID", javaType = String.class),
+		@Arg(column = "EXTERNAL_ATM_ID", javaType = String.class)
+	})
+	@SelectProvider(type = AtmPidListBuilder.class, method = "getAtmListForGroupBuilder")
+	@ResultType(AtmGroupAtmItem.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<AtmGroupAtmItem> getAtmListForGroup(@Param("groupId") Integer groupId,
+			@Param("instList") List<Institute> instList);
+
+	@ConstructorArgs({
+		@Arg(column = "ATM_ID", javaType = Integer.class),
 		@Arg(column = "EXTERNAL_ATM_ID", javaType = String.class),
 		@Arg(column = "ATM_NAME", javaType = String.class)
 	})
@@ -346,7 +361,7 @@ public interface AtmPidListMapper extends IMapper {
 	@Select("SELECT COALESCE(ag.NAME,'_') as DESCX FROM T_CM_ATM2ATM_GROUP agr "
 			+ "join T_CM_ATM_GROUP ag on (agr.atm_group_id = ag.id) WHERE ATM_ID =  #{atmId} "
 			+ "AND ag.id != #{groupId} AND ag.type_id = #{typeId}")
-	Pair getDescx_saveAttributeGroupAtms(@Param("atmId") Integer atmId, @Param("groupId") Integer groupId,
+	String getDescx_saveAttributeGroupAtms(@Param("atmId") Integer atmId, @Param("groupId") Integer groupId,
 			@Param("typeId") Integer typeId);
 
 	@Delete("DELETE FROM T_CM_ATM2ATM_GROUP WHERE ATM_GROUP_ID = #{groupId}")
