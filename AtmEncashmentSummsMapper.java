@@ -33,13 +33,11 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "trunc(ep.DATE_FORTHCOMING_ENCASHMENT) = #{date} AND ep.atm_id in (select id from t_cm_temp_atm_list) ")
 	@ResultType(Integer.class)
 	Integer getEncsCount(@Param("date") Date date);
-	
-	@Results({
-		@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
-		@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
-		@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
-		@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class)
-	})
+
+	@Results({ @Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
+			@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class) })
 	@Select("SELECT epd.DENOM_VALUE, sum(epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PLAN ep join T_CM_ENC_PLAN_DENOM epd on(ep.ENC_PLAN_ID = epd.ENC_PLAN_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -48,11 +46,9 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 	@ResultType(EncashmentCassItem.class)
 	@Options(useCache = true, fetchSize = 1000)
 	List<EncashmentCassItem> getEncsDenoms(@Param("date") Date date);
-	
-	@ConstructorArgs({
-		@Arg(column = "DENOM_COUNT", javaType = String.class),
-		@Arg(column = "CODE_A3", javaType = String.class)
-	})
+
+	@ConstructorArgs({ @Arg(column = "DENOM_COUNT", javaType = String.class),
+			@Arg(column = "CODE_A3", javaType = String.class) })
 	@Select("SELECT sum(epd.DENOM_VALUE*epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PLAN ep " + "join T_CM_ENC_PLAN_DENOM epd on(ep.ENC_PLAN_ID = epd.ENC_PLAN_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -61,13 +57,11 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 	@ResultType(Pair.class)
 	@Options(useCache = true, fetchSize = 1000)
 	List<Pair> getEncsCurrs(@Param("date") Date date);
-	
-	@Results({
-		@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
-		@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
-		@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
-		@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class)
-	})
+
+	@Results({ @Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
+			@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class) })
 	@Select("SELECT epd.DENOM_VALUE, sum(epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PLAN ep join T_CM_ENC_PLAN_DENOM epd on(ep.ENC_PLAN_ID = epd.ENC_PLAN_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -75,12 +69,10 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "GROUP BY epd.DENOM_VALUE,epd.DENOM_CURR,ci.CODE_A3 ORDER BY DENOM_CURR,DENOM_VALUE DESC")
 	@ResultType(EncashmentCassItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<EncashmentCassItem> getEncsDenoms(@Param("date") Date date, @Param("atmId") Integer atmId);
-	
-	@ConstructorArgs({
-		@Arg(column = "DENOM_COUNT", javaType = String.class),
-		@Arg(column = "CODE_A3", javaType = String.class)
-	})
+	List<EncashmentCassItem> getEncsDenomsById(@Param("date") Date date, @Param("atmId") Integer atmId);
+
+	@ConstructorArgs({ @Arg(column = "DENOM_COUNT", javaType = String.class),
+			@Arg(column = "CODE_A3", javaType = String.class) })
 	@Select("SELECT sum(epd.DENOM_VALUE*epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PLAN ep join T_CM_ENC_PLAN_DENOM epd on(ep.ENC_PLAN_ID = epd.ENC_PLAN_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -88,8 +80,8 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "GROUP BY epd.DENOM_CURR,ci.CODE_A3 ORDER BY DENOM_CURR")
 	@ResultType(Pair.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<Pair> getEncsCurrs(@Param("date") Date date, @Param("atmId") Integer atmId);
-	
+	List<Pair> getEncsCurrsById(@Param("date") Date date, @Param("atmId") Integer atmId);
+
 	@Result(column = "ENC_COUNT", javaType = Integer.class)
 	@Select("SELECT count(distinct ep.ID) as ENC_COUNT FROM T_CM_ENC_PERIOD ep "
 			+ "join T_CM_ENC_PERIOD_DENOM epd on (ep.ID = epd.ENC_PERIOD_ID) WHERE "
@@ -97,13 +89,11 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "AND ep.atm_id in (select id from t_cm_temp_atm_list) ")
 	@ResultType(Integer.class)
 	Integer getEncsCountForPeriod(@Param("date") Date date);
-	
-	@Results({
-		@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
-		@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
-		@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
-		@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class)
-	})
+
+	@Results({ @Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
+			@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class) })
 	@ResultType(EncashmentCassItem.class)
 	@Options(useCache = true, fetchSize = 1000)
 	@Select("SELECT epd.DENOM_VALUE, sum(epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
@@ -112,11 +102,9 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "trunc(ep.DATE_FORTHCOMING_ENCASHMENT) = #{date} AND ep.atm_id in (select id from t_cm_temp_atm_list) "
 			+ "GROUP BY epd.DENOM_VALUE,epd.DENOM_CURR,ci.CODE_A3 ORDER BY DENOM_CURR,DENOM_VALUE DESC")
 	List<EncashmentCassItem> getEncsDenomsForPeriod(@Param("date") Date date);
-	
-	@ConstructorArgs({
-		@Arg(column = "DENOM_COUNT", javaType = String.class),
-		@Arg(column = "CODE_A3", javaType = String.class)
-	})
+
+	@ConstructorArgs({ @Arg(column = "DENOM_COUNT", javaType = String.class),
+			@Arg(column = "CODE_A3", javaType = String.class) })
 	@Select("SELECT sum(epd.DENOM_VALUE*epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PERIOD ep join T_CM_ENC_PERIOD_DENOM epd on(ep.ID = epd.ENC_PERIOD_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -126,13 +114,11 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 	@ResultType(Pair.class)
 	@Options(useCache = true, fetchSize = 1000)
 	List<Pair> getEncsCurrsForPeriod(@Param("date") Date date);
-	
-	@Results({
-		@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
-		@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
-		@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
-		@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class)
-	})
+
+	@Results({ @Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_CURR", property = "denomCurr", javaType = Integer.class),
+			@Result(column = "CODE_A3", property = "denomCurrA3", javaType = String.class) })
 	@Select("SELECT epd.DENOM_VALUE, sum(epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PERIOD ep join T_CM_ENC_PERIOD_DENOM epd on(ep.ID = epd.ENC_PERIOD_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -140,12 +126,10 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "GROUP BY epd.DENOM_VALUE,epd.DENOM_CURR,ci.CODE_A3 ORDER BY DENOM_CURR,DENOM_VALUE DESC")
 	@ResultType(EncashmentCassItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<EncashmentCassItem> getEncsDenomsForPeriod(@Param("date") Date date, @Param("atmId") Integer atmId);
-	
-	@ConstructorArgs({
-		@Arg(column = "DENOM_COUNT", javaType = String.class),
-		@Arg(column = "CODE_A3", javaType = String.class)
-	})
+	List<EncashmentCassItem> getEncsDenomsForPeriodById(@Param("date") Date date, @Param("atmId") Integer atmId);
+
+	@ConstructorArgs({ @Arg(column = "DENOM_COUNT", javaType = String.class),
+			@Arg(column = "CODE_A3", javaType = String.class) })
 	@Select("SELECT sum(epd.DENOM_VALUE*epd.DENOM_COUNT) as DENOM_COUNT, epd.DENOM_CURR , ci.CODE_A3 "
 			+ "FROM T_CM_ENC_PERIOD ep join T_CM_ENC_PERIOD_DENOM epd on(ep.ID = epd.ENC_PERIOD_ID) "
 			+ "join T_CM_CURR ci on (DENOM_CURR = ci.code_n3) WHERE "
@@ -153,5 +137,5 @@ public interface AtmEncashmentSummsMapper extends IMapper {
 			+ "GROUP BY epd.DENOM_CURR,ci.CODE_A3 ORDER BY DENOM_CURR")
 	@ResultType(Pair.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<Pair> getEncsCurrsForPeriod(@Param("date") Date date, @Param("atmId") Integer atmId);
+	List<Pair> getEncsCurrsForPeriodById(@Param("date") Date date, @Param("atmId") Integer atmId);
 }

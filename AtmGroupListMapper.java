@@ -16,7 +16,7 @@ import ru.bpc.cm.cashmanagement.AtmGroupListController;
 import ru.bpc.cm.cashmanagement.orm.builders.AtmGroupListBuilder;
 import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.items.settings.AtmGroupItem;
-import ru.bpc.cm.utils.IFilterItem;
+import ru.bpc.cm.utils.IntFilterItem;
 import ru.bpc.cm.utils.Pair;
 
 /**
@@ -35,7 +35,8 @@ public interface AtmGroupListMapper extends IMapper {
 	})
 	@Select("SELECT id, name FROM t_cm_atm_group WHERE type_id = #{typeId} ORDER BY name")
 	@Options(useCache = true, fetchSize = 1000)
-	List<IFilterItem<Integer>> getFullGroupList(@Param("typeId") Integer typeId);
+	@ResultType(IntFilterItem.class)
+	List<IntFilterItem> getFullGroupList(@Param("typeId") Integer typeId);
 	
 	@ConstructorArgs({
 		@Arg(column = "id", javaType = Integer.class),
@@ -43,7 +44,8 @@ public interface AtmGroupListMapper extends IMapper {
 	})
 	@Select("SELECT id, name FROM t_cm_atm_group WHERE type_id <> #{typeId} ORDER BY name")
 	@Options(useCache = true, fetchSize = 1000)
-	List<IFilterItem<Integer>> getFullAttrGroupList(@Param("typeId") Integer typeId);
+	@ResultType(IntFilterItem.class)
+	List<IntFilterItem> getFullAttrGroupList(@Param("typeId") Integer typeId);
 	
 	@Results({
 		@Result(column = "ID", property = "atmGroupID", javaType = Integer.class),

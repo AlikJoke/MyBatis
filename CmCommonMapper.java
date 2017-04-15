@@ -61,7 +61,7 @@ public interface CmCommonMapper extends IMapper {
 			+ "UNION SELECT SECONDARY_CURR_CODE FROM V_CM_ATM_CURR UNION "
 			+ "SELECT SECONDARY2_CURR_CODE FROM V_CM_ATM_CURR UNION SELECT SECONDARY3_CURR_CODE "
 			+ "FROM V_CM_ATM_CURR ) WHERE CURR_CODE > 0")
-	List<Integer> getAtmCurrencies();
+	List<Integer> getAtmCurrencies_currCode();
 	
 	@Result(column = "DENOM")
 	@ResultType(Integer.class)
@@ -96,8 +96,8 @@ public interface CmCommonMapper extends IMapper {
 	
 	@Result(column = "CL_DAY_TYPE")
 	@ResultType(Integer.class)
-	@Select("SELECT DISTINCT CL_DAY_TYPE FROM T_CM_CALENDAR_DAYS WHERE CL_ID = (SELECT CALENDAR_ID FROM T_CM_ATM WHERE ATM_ID = #{atmId}")
-	Integer getAtmTypeByDemand(@Param("atmId") Integer atmId);
+	@Select("SELECT DISTINCT CL_DAY_TYPE FROM T_CM_CALENDAR_DAYS WHERE CL_ID = (SELECT CALENDAR_ID FROM T_CM_ATM WHERE ATM_ID = #{atmId})")
+	List<Integer> getAtmTypeByDemand(@Param("atmId") Integer atmId);
 	
 	@Result(column = "TYPE")
 	@ResultType(Integer.class)

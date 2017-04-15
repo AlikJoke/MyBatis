@@ -39,7 +39,7 @@ public class AtmPidListController {
 
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			result.addAll(session.getMapper(getMapperClass()).getAtmListFull());
+			result.addAll(session.getMapper(getMapperClass()).getAtmListFull_withoutParams());
 		} catch (Exception e) {
 			_logger.error("", e);
 		} finally {
@@ -287,7 +287,7 @@ public class AtmPidListController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
 			AtmPidListMapper mapper = session.getMapper(getMapperClass());
-			result.addAll(mapper.getAtmListForGroupList(sortByOutOfCurrDate));
+			result.addAll(mapper.getAtmListForGroupList_sort(sortByOutOfCurrDate));
 		} catch (Exception e) {
 			_logger.error("", e);
 		} finally {
@@ -302,7 +302,7 @@ public class AtmPidListController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
 			AtmPidListMapper mapper = session.getMapper(getMapperClass());
-			result.addAll(mapper.getAtmListForGroupList(sortByOutOfCurrDate, instList));
+			result.addAll(mapper.getAtmListForGroupList_sortInst(sortByOutOfCurrDate, instList));
 		} catch (Exception e) {
 			_logger.error("", e);
 		} finally {
@@ -330,7 +330,7 @@ public class AtmPidListController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
 			AtmPidListMapper mapper = session.getMapper(getMapperClass());
-			atmGroupAtmList.addAll(mapper.getAtmListForGroup(groupId));
+			atmGroupAtmList.addAll(mapper.getAtmListForGroupByGroupId(groupId));
 		} catch (Exception e) {
 			_logger.error("", e);
 		} finally {
@@ -373,7 +373,8 @@ public class AtmPidListController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
 			AtmPidListMapper mapper = session.getMapper(getMapperClass());
-			atmGroupAtmList.addAll(mapper.getAtmListFull(personid, AtmGroupType.USER_TO_ATM.getId(), atmGroupID));
+			atmGroupAtmList
+					.addAll(mapper.getAtmListFull_withoutInst(personid, AtmGroupType.USER_TO_ATM.getId(), atmGroupID));
 		} catch (Exception e) {
 			_logger.error("", e);
 		} finally {
@@ -420,7 +421,7 @@ public class AtmPidListController {
 		try {
 			AtmPidListMapper mapper = session.getMapper(getMapperClass());
 			atmGroupAtmList.addAll(
-					mapper.getAvaliableAtmsListForGroup(atmGroupID, AtmGroupType.USER_TO_ATM.getId(), instList));
+					mapper.getAvaliableAtmsListForGroup_inst(atmGroupID, AtmGroupType.USER_TO_ATM.getId(), instList));
 		} catch (Exception e) {
 			_logger.error("", e);
 		} finally {
@@ -451,7 +452,7 @@ public class AtmPidListController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
 			AtmPidListMapper mapper = session.getMapper(getMapperClass());
-			atmGroupAtmList.addAll(mapper.getAvaliableAtmsListForAttributeGroup(atmGroupID,
+			atmGroupAtmList.addAll(mapper.getAvaliableAtmsListForAttributeGroup_inst(atmGroupID,
 					AtmGroupType.USER_TO_ATM.getId(), instList));
 		} catch (Exception e) {
 			_logger.error("", e);

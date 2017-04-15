@@ -24,7 +24,7 @@ import ru.bpc.cm.items.cashmanagement.NotifyMessageItem;
  * 
  * @author Alimurad A. Ramazanov
  * @since 24.02.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface NotifyMessageMapper extends IMapper {
@@ -36,8 +36,8 @@ public interface NotifyMessageMapper extends IMapper {
 
 	@ConstructorArgs({
 		@Arg(column = "CREATE_DATE", javaType = Timestamp.class),
-		@Arg(column = "IS_NEW", javaType = Boolean.class),
 		@Arg(column = "ID", javaType = Integer.class),
+		@Arg(column = "IS_NEW", javaType = Boolean.class),
 		@Arg(column = "MESSAGE_TYPE", javaType = Integer.class),
 		@Arg(column = "PARAMS", javaType = String.class)
 	})

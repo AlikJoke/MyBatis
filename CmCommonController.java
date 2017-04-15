@@ -113,7 +113,7 @@ public class CmCommonController {
 		List<Integer> atmCurrencies = new ArrayList<Integer>();
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<Integer> tempAtmCurrencies = session.getMapper(getMapperClass()).getAtmCurrencies();
+			List<Integer> tempAtmCurrencies = session.getMapper(getMapperClass()).getAtmCurrencies_currCode();
 			for (int i = 0; i < tempAtmCurrencies.size() && i < 4; i++)
 				atmCurrencies.add(tempAtmCurrencies.get(i));
 		} catch (Exception e) {
@@ -237,8 +237,8 @@ public class CmCommonController {
 	public static AtmTypeByDemand getAtmTypeByDemand(ISessionHolder sessionHolder, int atmId) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			Integer type = session.getMapper(getMapperClass()).getAtmTypeByDemand(atmId);
-			if (type == CalendarDayType.SALARY_DAYS.getCalendarDayType())
+			List<Integer> type = session.getMapper(getMapperClass()).getAtmTypeByDemand(atmId);
+			if ((!type.isEmpty() ? type.get(0) : null) == CalendarDayType.SALARY_DAYS.getCalendarDayType())
 				return AtmTypeByDemand.SALARY;
 		} catch (Exception e) {
 			logger.error("", e);

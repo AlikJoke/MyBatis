@@ -1,15 +1,19 @@
 package ru.bpc.cm.cashmanagement.orm.builders;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.SqlSession;
+
+import ru.bpc.cm.config.utils.ORMUtils;
 import ru.bpc.cm.items.encashments.AtmEncSubmitFilter;
 import ru.bpc.cm.utils.CmUtils;
 
 public class AtmEncashmentBuilder {
 
 	public String getAtmEncashmentListBuilder(Map<String, Object> params) {
-		AtmEncSubmitFilter filter = (AtmEncSubmitFilter) params.get("addFilter");
+		AtmEncSubmitFilter filter = (AtmEncSubmitFilter) params.get("filter");
 		StringBuilder sql = new StringBuilder("SELECT " + "ENC_PLAN_ID, aep.ATM_ID, aep.DATE_PREVIOUS_ENCASHMENT,"
 				+ " aep.DATE_FORTHCOMING_ENCASHMENT, " + " IS_APPROVED, EMERGENCY_ENCASHMENT,CONFIRM_ID, "
 				+ " u.NAME as APPROVE_NAME,u2.NAME as CONFIRM_NAME, "
@@ -85,5 +89,11 @@ public class AtmEncashmentBuilder {
 				+ "WHERE " + "1 = 1 ");
 		sql.append(CmUtils.getIdListInClause(selectedEncashments, "ENC_PLAN_ID"));
 		return sql.toString();
+	}
+
+	public String generateEncashmentRequestId(Map<String, Object> params) throws SQLException {
+		SqlSession session = (SqlSession) params.get("session");
+		return "select " + ORMUtils.getNextSequence(session, "s_enc_plan_req_id") + " as REQ_ID "
+				+ ORMUtils.getFromDummyExpression(session);
 	}
 }

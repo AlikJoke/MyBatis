@@ -17,8 +17,10 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
 import org.apache.ibatis.annotations.UpdateProvider;
+import org.apache.ibatis.session.SqlSession;
 
 import ru.bpc.cm.cashmanagement.orm.builders.AtmEncashmentBuilder;
+import ru.bpc.cm.cashmanagement.orm.items.FullCodesDto;
 import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.encashments.AtmEncashmentController;
 import ru.bpc.cm.items.encashments.AtmCurrStatItem;
@@ -169,6 +171,33 @@ public interface AtmEncashmentMapper extends IMapper {
 	List<EncashmentCassItem> getAtmEncashmentCassList(@Param("encPlanId") Integer encPlanId);
 
 	@Results({
+		@Result(column = "MAIN_CURR_CODE", property = "mainCurrCode", javaType = String.class),
+		@Result(column = "MAIN_CURR_SUMM", property = "mainCurrSumm", javaType = String.class),
+		@Result(column = "MAIN_CURR_AVG_DEMAND", property = "mainCurAvgDemand", javaType = String.class),
+		@Result(column = "MAIN_CURR_CODE_A3", property = "mainCurrCodeA3", javaType = String.class),
+		@Result(column = "SECONDARY_CURR_CODE", property = "secCurrCode", javaType = String.class),
+		@Result(column = "SEC_CURR_SUMM", property = "secCurrSumm", javaType = String.class),
+		@Result(column = "SEC_CURR_AVG_DEMAND", property = "secCurAvgDemand", javaType = String.class),
+		@Result(column = "SEC_CURR_CODE_A3", property = "secCurrCodeA3", javaType = String.class),
+		@Result(column = "SECONDARY2_CURR_CODE", property = "sec2CurrCode", javaType = String.class),
+		@Result(column = "SEC2_CURR_SUMM", property = "sec2CurrSumm", javaType = String.class),
+		@Result(column = "SEC2_CURR_AVG_DEMAND", property = "sec2CurAvgDemand", javaType = String.class),
+		@Result(column = "SEC2_CURR_CODE_A3", property = "sec2CurrCodeA3", javaType = String.class),
+		@Result(column = "SECONDARY3_CURR_CODE", property = "sec3CurrCode", javaType = String.class),
+		@Result(column = "SEC3_CURR_SUMM", property = "sec3CurrSumm", javaType = String.class),
+		@Result(column = "SEC3_CURR_AVG_DEMAND", property = "sec3CurAvgDemand", javaType = String.class),
+		@Result(column = "SEC3_CURR_CODE_A3", property = "sec3CurrCodeA3", javaType = String.class)
+	})
+	@ResultType(FullCodesDto.class)
+	@Select("SELECT MAIN_CURR_CODE, MAIN_CURR_SUMM, MAIN_CURR_AVG_DEMAND, MAIN_CURR_CODE_A3, "
+			+ "SECONDARY_CURR_CODE, SEC_CURR_SUMM, SEC_CURR_AVG_DEMAND, SEC_CURR_CODE_A3, "
+			+ "SECONDARY2_CURR_CODE, SEC2_CURR_SUMM, SEC2_CURR_AVG_DEMAND, SEC2_CURR_CODE_A3, "
+			+ "SECONDARY3_CURR_CODE, SEC3_CURR_SUMM, SEC3_CURR_AVG_DEMAND, SEC3_CURR_CODE_A3 "
+			+ "FROM V_CM_ENC_PLAN_CURR WHERE ENC_PLAN_ID = #{encPlanId}")
+	@Options(useCache = true)
+	FullCodesDto getAtmEncashmentCurrencies(@Param("encPlanId") Integer encPlanId);
+	
+	@Results({
 		@Result(column = "ID", property = "key", javaType = Integer.class),
 		@Result(column = "DESCRIPTION", property = "value", javaType = String.class)
 	})
@@ -177,16 +206,16 @@ public interface AtmEncashmentMapper extends IMapper {
 			+ "join T_CM_ATM2ATM_GROUP agr on(agr.atm_group_id = ag.id) WHERE 1=1 AND agr.ATM_ID = #{atmId} "
 			+ "AND ag.type_id = #{typeId}")
 	@Options(useCache = true)
-	List<ObjectPair<Integer, String>> getAtmEncashmentMaxAtmCount(@Param("atmId") Integer atmId,
+	ObjectPair<Integer, String> getAtmEncashmentMaxAtmCount(@Param("atmId") Integer atmId,
 			@Param("typeId") Integer typeId);
 
 	@Result(column = "ENC_COUNT", javaType = Integer.class)
-	@ResultType(ObjectPair.class)
+	@ResultType(Integer.class)
 	@Select("SELECT count(distinct ATM_ID) as ENC_COUNT FROM T_CM_ENC_PLAN WHERE 1=1 "
 			+ "AND DATE_FORTHCOMING_ENCASHMENT = #{date} AND ATM_ID IN "
 			+ "(SELECT ATM_ID FROM T_CM_ATM2ATM_GROUP WHERE ATM_GROUP_ID = #{maxCount})")
 	@Options(useCache = true, fetchSize = 1000)
-	List<ObjectPair<Integer, String>> getAtmEncashmentMaxAtmCount_count(@Param("date") Date date,
+	Integer getAtmEncashmentMaxAtmCount_count(@Param("date") Date date,
 			@Param("maxCount") Integer maxCount);
 
 	@UpdateProvider(type = AtmEncashmentBuilder.class, method = "approveSelectedEncahmentsBuilder")
@@ -237,7 +266,7 @@ public interface AtmEncashmentMapper extends IMapper {
 			+ "FROM T_CM_ENC_PLAN_REQUEST er WHERE (er.USER_ID = #{personId} OR #{isFetchAll} = 1) AND er.REQUEST_DATE >= #{startDate} "
 			+ "AND er.REQUEST_DATE <= #{endDate} AND (er.ID = #{reqId} OR #{reqId} = 0) ORDER BY REQUEST_DATE")
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmEncRequestItem> getEncashmentRequests(@Param("personId") Integer personId,
+	List<AtmEncRequestItem> getEncashmentRequests_withStartDate(@Param("personId") Integer personId,
 			@Param("isFetchAll") Integer isFetchAll, @Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("reqId") Integer reqId);
 	
@@ -254,6 +283,11 @@ public interface AtmEncashmentMapper extends IMapper {
 	@Options(useCache = true, fetchSize = 1000)
 	List<AtmEncRequestItem> getEncashmentRequests(@Param("personId") Integer personId, @Param("date") Date date);
 
+	@Result(column = "REQ_ID", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@SelectProvider(type = AtmEncashmentBuilder.class, method = "generateEncashmentRequestId")
+	Integer generateEncashmentRequestId(@Param("session") SqlSession session);
+	
 	@Insert("INSERT INTO T_CM_ENC_PLAN_REQUEST (ID,REQUEST_DATE,NAME,DESCRIPTION,USER_ID) VALUES "
 			+ "(#{id},#{date},#{name},#{dsc},#{userId})")
 	void changeEncashmnetRequest_insert(@Param("id") Integer id, @Param("date") Date date, @Param("name") String name,

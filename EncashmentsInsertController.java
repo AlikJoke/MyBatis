@@ -44,7 +44,7 @@ import ru.bpc.cm.utils.ObjectPair;
 import ru.bpc.cm.utils.db.JdbcUtils;
 
 public class EncashmentsInsertController {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger("CASH_MANAGEMENT");
 
 	private static Class<EncashmentsInsertMapper> getMapperClass() {
@@ -87,17 +87,17 @@ public class EncashmentsInsertController {
 								item.getEncPriceCashIn(), item.getEncPriceCashOut(), item.getEncPriceBothInOut());
 
 						if (item.getPersonID() == 0)
-							CmCommonController.insertEncashmentMessage(session.getConnection(), encPlanID,
+							CmCommonController.insertEncashmentMessage(sessionHolder, encPlanID,
 									EncashmentLogType.ENCASHMENT_CREATION, EncashmentLogType.SYSTEM_MESSAGE, -1);
 						else
-							CmCommonController.insertEncashmentMessage(session.getConnection(), encPlanID,
+							CmCommonController.insertEncashmentMessage(sessionHolder, encPlanID,
 									EncashmentLogType.ENCASHMENT_CREATION, EncashmentLogType.SYSTEM_MESSAGE,
 									item.getPersonID());
 					} else {
 						actionType = AuditActionTypes.MODIFY;
 
 						objBefore = new EncashmentWrapper(
-								AtmEncashmentController.getEncashmentById(session.getConnection(), encPlanID));
+								AtmEncashmentController.getEncashmentById(sessionHolder, encPlanID));
 						mapper.updateForecastData(encPlanID, item.getAtmId(),
 								JdbcUtils.getSqlDate(item.getLastEncDate()), item.getForthcomingEncInterval(),
 								new Timestamp(item.getForthcomingEncDate().getTime()),
@@ -108,7 +108,7 @@ public class EncashmentsInsertController {
 								item.getEncTypeByLosts().getId(), item.getEncPriceCashIn(), item.getEncPriceCashOut(),
 								item.getEncPriceBothInOut());
 
-						CmCommonController.insertEncashmentMessage(session.getConnection(), encPlanID,
+						CmCommonController.insertEncashmentMessage(sessionHolder, encPlanID,
 								EncashmentLogType.ENCASHMENT_CHANGE, EncashmentLogType.SYSTEM_MESSAGE,
 								item.getPersonID());
 
@@ -128,7 +128,7 @@ public class EncashmentsInsertController {
 						}
 					}
 					EncashmentWrapper objAfter = new EncashmentWrapper(
-							AtmEncashmentController.getEncashmentById(session.getConnection(), encPlanID));
+							AtmEncashmentController.getEncashmentById(sessionHolder, encPlanID));
 
 					AuditLogger.sendAsynchronously(EventBuilder.buildEventFromWrappedObjects(login, actionType,
 							String.valueOf(encPlanID), objBefore, objAfter));
@@ -199,94 +199,62 @@ public class EncashmentsInsertController {
 		}
 	}
 
-	/*public static List<ObjectPair<Integer,List<EncashmentType>>> checkExistingEncashments(
-			Connection con, List<IFilterItem<Integer>> atmList) {
-	
-		List<ObjectPair<Integer,List<EncashmentType>>> newAtmList = new ArrayList<ObjectPair<Integer,List<EncashmentType>>>();
-		List<EncashmentType> approvedEncList = new ArrayList<EncashmentType>();
-		List<Integer> deleteEncList = null;
-		ResultSet rs = null;
-		PreparedStatement pstmt = null;
-		Date dateForCheck = new Date();
-		try {
-			for (IFilterItem<Integer> item : atmList) {
-				int atmId = item.getValue();
-				deleteEncList = new ArrayList<Integer>();
-				approvedEncList = new ArrayList<EncashmentType>();
-				
-				String query = "SELECT ENC_PLAN_ID as FROM T_CM_ENC_PLAN "
-						+ "WHERE ATM_ID = ? "
-						+ "AND DATE_FORTHCOMING_ENCASHMENT >= ? "
-						+ "AND IS_APPROVED = 0";
-				pstmt = con.prepareStatement(query);
-				pstmt.setInt(1, atmId);
-				pstmt.setDate(2,
-						JdbcUtils.getSqlDate(dateForCheck));
-				rs = pstmt.executeQuery();
-				while (rs.next()) {
-					deleteEncList.add(rs.getInt("ENC_PLAN_ID"));
-				}
-				JdbcUtils.close(pstmt);
-				JdbcUtils.close(rs);
-	
-				String deleteEncListClause = CmUtils.getIdListInClause(
-						deleteEncList, "ENC_PLAN_ID");
-	
-				StringBuffer sb = new StringBuffer(
-						"DELETE FROM T_CM_ENC_PLAN_DENOM " + "WHERE 1=1 ");
-				sb.append(deleteEncListClause);
-				if (!deleteEncList.isEmpty()){
-					pstmt = con.prepareStatement(sb.toString());
-					pstmt.executeUpdate();
-					JdbcUtils.close(pstmt);
-				}
-	
-				sb = new StringBuffer("DELETE FROM T_CM_ENC_PLAN_CURR "
-						+ "WHERE 1=1 ");
-				sb.append(deleteEncListClause);
-				if (!deleteEncList.isEmpty()){
-					pstmt = con.prepareStatement(sb.toString());
-					pstmt.executeUpdate();
-					JdbcUtils.close(pstmt);
-				}
-	
-				sb = new StringBuffer("DELETE FROM T_CM_ENC_PLAN "
-						+ "WHERE 1 = 1 ");
-				sb.append(deleteEncListClause);
-				if (!deleteEncList.isEmpty()){
-					pstmt = con.prepareStatement(sb.toString());
-					pstmt.executeUpdate();
-					JdbcUtils.close(pstmt);
-                }
-	
-				query = "SELECT ep.ENCASHMENT_TYPE "
-						+ "FROM V_CM_ENC_FORTHCOMING ep "
-						+ "WHERE ep.ATM_ID = ? "
-						+ "AND ep.DATE_FORTHCOMING_ENCASHMENT >= ? ";
-				pstmt = con.prepareStatement(query);
-				pstmt.setString(1, atmId);
-				pstmt.setDate(2,
-						JdbcUtils.getSqlDate(dateForCheck));
-				rs = pstmt.executeQuery();
-				while (rs.next()) {
-					approvedEncList.add(CmUtils.getEnumValueById(EncashmentType.class, rs.getInt("ENCASHMENT_TYPE")));
-				}
-	
-				JdbcUtils.close(pstmt);
-				JdbcUtils.close(rs);
-				
-				newAtmList.add(new ObjectPair<String, List<EncashmentType>>(atmId, approvedEncList));
-			}
-			atmList.clear();
-		} catch (Exception e) {
-			ForecastCommonController.logger.error("", e);
-		} finally {
-			JdbcUtils.close(pstmt);
-			JdbcUtils.close(rs);
-		}
-		return newAtmList;
-	}*/
-	
+	/*
+	 * public static List<ObjectPair<Integer,List<EncashmentType>>>
+	 * checkExistingEncashments( Connection con, List<IFilterItem<Integer>>
+	 * atmList) {
+	 * 
+	 * List<ObjectPair<Integer,List<EncashmentType>>> newAtmList = new
+	 * ArrayList<ObjectPair<Integer,List<EncashmentType>>>();
+	 * List<EncashmentType> approvedEncList = new ArrayList<EncashmentType>();
+	 * List<Integer> deleteEncList = null; ResultSet rs = null;
+	 * PreparedStatement pstmt = null; Date dateForCheck = new Date(); try { for
+	 * (IFilterItem<Integer> item : atmList) { int atmId = item.getValue();
+	 * deleteEncList = new ArrayList<Integer>(); approvedEncList = new
+	 * ArrayList<EncashmentType>();
+	 * 
+	 * String query = "SELECT ENC_PLAN_ID as FROM T_CM_ENC_PLAN " +
+	 * "WHERE ATM_ID = ? " + "AND DATE_FORTHCOMING_ENCASHMENT >= ? " +
+	 * "AND IS_APPROVED = 0"; pstmt = con.prepareStatement(query);
+	 * pstmt.setInt(1, atmId); pstmt.setDate(2,
+	 * JdbcUtils.getSqlDate(dateForCheck)); rs = pstmt.executeQuery(); while
+	 * (rs.next()) { deleteEncList.add(rs.getInt("ENC_PLAN_ID")); }
+	 * JdbcUtils.close(pstmt); JdbcUtils.close(rs);
+	 * 
+	 * String deleteEncListClause = CmUtils.getIdListInClause( deleteEncList,
+	 * "ENC_PLAN_ID");
+	 * 
+	 * StringBuffer sb = new StringBuffer( "DELETE FROM T_CM_ENC_PLAN_DENOM " +
+	 * "WHERE 1=1 "); sb.append(deleteEncListClause); if
+	 * (!deleteEncList.isEmpty()){ pstmt = con.prepareStatement(sb.toString());
+	 * pstmt.executeUpdate(); JdbcUtils.close(pstmt); }
+	 * 
+	 * sb = new StringBuffer("DELETE FROM T_CM_ENC_PLAN_CURR " + "WHERE 1=1 ");
+	 * sb.append(deleteEncListClause); if (!deleteEncList.isEmpty()){ pstmt =
+	 * con.prepareStatement(sb.toString()); pstmt.executeUpdate();
+	 * JdbcUtils.close(pstmt); }
+	 * 
+	 * sb = new StringBuffer("DELETE FROM T_CM_ENC_PLAN " + "WHERE 1 = 1 ");
+	 * sb.append(deleteEncListClause); if (!deleteEncList.isEmpty()){ pstmt =
+	 * con.prepareStatement(sb.toString()); pstmt.executeUpdate();
+	 * JdbcUtils.close(pstmt); }
+	 * 
+	 * query = "SELECT ep.ENCASHMENT_TYPE " + "FROM V_CM_ENC_FORTHCOMING ep " +
+	 * "WHERE ep.ATM_ID = ? " + "AND ep.DATE_FORTHCOMING_ENCASHMENT >= ? ";
+	 * pstmt = con.prepareStatement(query); pstmt.setString(1, atmId);
+	 * pstmt.setDate(2, JdbcUtils.getSqlDate(dateForCheck)); rs =
+	 * pstmt.executeQuery(); while (rs.next()) {
+	 * approvedEncList.add(CmUtils.getEnumValueById(EncashmentType.class,
+	 * rs.getInt("ENCASHMENT_TYPE"))); }
+	 * 
+	 * JdbcUtils.close(pstmt); JdbcUtils.close(rs);
+	 * 
+	 * newAtmList.add(new ObjectPair<String, List<EncashmentType>>(atmId,
+	 * approvedEncList)); } atmList.clear(); } catch (Exception e) {
+	 * ForecastCommonController.logger.error("", e); } finally {
+	 * JdbcUtils.close(pstmt); JdbcUtils.close(rs); } return newAtmList; }
+	 */
+
 	public static List<ObjectPair<Integer, List<EncashmentType>>> checkExistingEncashments(ISessionHolder sessionHolder,
 			List<IFilterItem<Integer>> atmList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
@@ -323,7 +291,7 @@ public class EncashmentsInsertController {
 		}
 		return newAtmList;
 	}
-	
+
 	public static List<ObjectPair<Integer, List<EncashmentType>>> checkExistingEncashmentsForSimpleList(
 			ISessionHolder sessionHolder, List<Integer> atmList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
@@ -377,7 +345,7 @@ public class EncashmentsInsertController {
 		}
 		return 0;
 	}
-	
+
 	public static void ensureRouteConsistencyForEnc(ISessionHolder sessionHolder, AnyAtmForecast forecast,
 			EncashmentType missingEncType, boolean useMainCurr) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
@@ -420,7 +388,7 @@ public class EncashmentsInsertController {
 			session.close();
 		}
 	}
-	
+
 	public static void updateRoute(ISessionHolder sessionHolder, int routeId) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		AtmRouteFilter filter = new AtmRouteFilter();
@@ -432,7 +400,7 @@ public class EncashmentsInsertController {
 				filter.setRegion(pair.getKey());
 				filter.setDateStart(JdbcUtils.getDate(pair.getValue()));
 				try {
-					RoutingController.recalculateRoute(session.getConnection(), filter, routeId);
+					RoutingController.recalculateRoute(sessionHolder, session.getConnection(), filter, routeId);
 				} catch (RoutingException e) {
 					ForecastCommonController.logger.error("Error recalculating route " + routeId, e);
 				}
@@ -443,7 +411,7 @@ public class EncashmentsInsertController {
 			session.close();
 		}
 	}
-	
+
 	public static int getRouteIdForEnc(ISessionHolder sessionHolder, AnyAtmForecast forecast) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		int routeID = 0;

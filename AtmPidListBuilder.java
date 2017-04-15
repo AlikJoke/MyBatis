@@ -34,7 +34,7 @@ public class AtmPidListBuilder {
 		}
 		querConstr.setQueryTail(" ORDER BY ATM_GROUP_NAME, atm_id");
 		String query = querConstr.getQuery();
-		return query.replaceFirst("?", "#{atmIdFilter, jdbcType=NUMERIC}").replaceAll("?", "#{nameAndAddressFilter}");
+		return query.replaceFirst("?", "#{atmIdFilter").replaceAll("?", "#{nameAndAddressFilter}");
 	}
 
 	public String getAtmListSplitByGroupListDescxBuilder2(Map<String, Object> params) throws SQLException {
@@ -58,7 +58,7 @@ public class AtmPidListBuilder {
 		}
 		querConstr.setQueryTail(" ORDER BY ATM_GROUP_NAME, atm_id");
 		String query = querConstr.getQuery();
-		return query.replaceFirst("?", "#{atmId}").replaceAll("?", "#{nameAndAddress}");
+		return query.replaceFirst("\\?", "#{atmId}").replaceAll("\\?", "#{nameAndAddress}");
 	}
 
 	public String getAtmListSplitByGroupBuilder(Map<String, Object> params) {
@@ -173,10 +173,10 @@ public class AtmPidListBuilder {
 			sql.append("AND NOT EXISTS " + "(SELECT null " + "FROM T_CM_ATM2ATM_GROUP agr1 "
 					+ "join T_CM_ATM_GROUP ag1 on (ag1.ID = agr1.ATM_GROUP_ID) "
 					+ "join T_cm_USER2ATM_GROUPS uag on (uag.ATM_GROUP_ID = agr1.ATM_GROUP_ID) " + "WHERE "
-					+ "uag.USER_ID != ? " + "AND agr1.ATM_ID = ai.ATM_ID " + "AND ag1.TYPE_ID = ?) ");
+					+ "uag.USER_ID != #{personId} " + "AND agr1.ATM_ID = ai.ATM_ID " + "AND ag1.TYPE_ID = #{typeId}) ");
 
 			sql.append("UNION SELECT agr.ATM_ID as ATM_ID,ai.STATE,ai.CITY,ai.STREET " + "FROM T_CM_ATM2ATM_GROUP agr "
-					+ "join T_CM_ATM ai on (ai.ATM_ID = agr.ATM_ID) " + "WHERE agr.ATM_GROUP_ID = ? ");
+					+ "join T_CM_ATM ai on (ai.ATM_ID = agr.ATM_ID) " + "WHERE agr.ATM_GROUP_ID = #{groupId} ");
 		}
 		sql.append(CmUtils.getInstListInClause(instList, "ai.inst_id"));
 		sql.append(" ORDER BY atm_id ");
@@ -199,7 +199,7 @@ public class AtmPidListBuilder {
 		return sql.toString();
 	}
 
-	public String getAvaliableAtmsListForAttributeGroup(Map<String, Object> params) {
+	public String getAvaliableAtmsListForAttributeGroupBuilder(Map<String, Object> params) {
 		@SuppressWarnings("unchecked")
 		List<Institute> instList = (List<Institute>) params.get("instList");
 		StringBuilder sql = new StringBuilder(

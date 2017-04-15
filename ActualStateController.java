@@ -426,7 +426,7 @@ public class ActualStateController {
 					mapper.updateAtmActualState(new Timestamp(new Date().getTime()), forecast.getAtmId());
 			}
 		} finally {
-			//session.commit();
+			// session.commit();
 			session.close();
 		}
 	}
@@ -437,7 +437,7 @@ public class ActualStateController {
 		try {
 			session.getMapper(getMapperClass()).updateInitialsForAtm(cashInVolume, rejectVolume, cashInRVolume, atmId);
 		} finally {
-			//session.commit();
+			// session.commit();
 			session.close();
 		}
 	}
@@ -457,8 +457,8 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId, atmId,
-					new AtmCassetteOutResultHandler());
+			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId,
+					atmId, new AtmCassetteOutResultHandler());
 			for (AtmCassetteItem cassette : cassettes)
 				cassette.setType(AtmCassetteType.CASH_OUT_CASS);
 			cassList.addAll(cassettes);
@@ -471,8 +471,8 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashInRecyclingCassettes(cashInEcnashmentId, atmId,
-					new AtmCassetteInResultHandler());
+			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass())
+					.getCashInRecyclingCassettes(cashInEcnashmentId, atmId, new AtmCassetteInResultHandler());
 			for (AtmCassetteItem cassette : cassettes)
 				cassette.setType(AtmCassetteType.CASH_IN_R_CASS);
 			cassList.addAll(cassettes);
@@ -499,7 +499,7 @@ public class ActualStateController {
 			}
 			mapper.deleteAtmCassettes(atmId);
 		} finally {
-			//session.commit();
+			// session.commit();
 			session.close();
 		}
 	}
@@ -512,7 +512,7 @@ public class ActualStateController {
 			mapper.updateCalculatedRemainingForAtms2(AtmCassetteType.CASH_IN_CASS.getId());
 			mapper.updateCalculatedRemainingForAtms3(AtmCassetteType.CASH_IN_R_CASS.getId());
 		} finally {
-			//session.commit();
+			// session.commit();
 			session.close();
 		}
 	}

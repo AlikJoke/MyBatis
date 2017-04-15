@@ -5,7 +5,6 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Options;
@@ -15,7 +14,6 @@ import org.apache.ibatis.annotations.ResultType;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
-import org.apache.ibatis.executor.BatchResult;
 
 import ru.bpc.cm.cashmanagement.orm.builders.ForecastForPeriodBuilder;
 import ru.bpc.cm.config.IMapper;
@@ -34,7 +32,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 
 	@Results({
 		@Result(column = "code_a3", property = "currCodeA3", javaType = String.class),
-		@Result(column = "curr_remaining", property = "crRemainingEndDay", javaType = Integer.class),
+		@Result(column = "curr_remaining", property = "crRemainingEndDay", javaType = Long.class),
 		@Result(column = "take_off", property = "crSummTakeOff", javaType = Long.class),
 		@Result(column = "stat_Date", property = "statDate", javaType = Timestamp.class),
 		@Result(column = "RNK", property = "rnk", javaType = Integer.class),
@@ -54,7 +52,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 	
 	@Results({
 		@Result(column = "code_a3", property = "currCodeA3", javaType = String.class),
-		@Result(column = "curr_remaining", property = "crRemainingEndDay", javaType = Integer.class),
+		@Result(column = "curr_remaining", property = "crRemainingEndDay", javaType = Long.class),
 		@Result(column = "take_in", property = "crSummInsert", javaType = Long.class),
 		@Result(column = "take_off", property = "crSummTakeOff", javaType = Long.class),
 		@Result(column = "stat_Date", property = "statDate", javaType = Timestamp.class),
@@ -74,7 +72,7 @@ public interface ForecastForPeriodMapper extends IMapper {
 			@Param("endDate") Timestamp endDate, @Param("currCode") Integer currCode);
 	
 	@Results({
-		@Result(column = "curr_remaining", property = "ciRemainingEndDay", javaType = Integer.class),
+		@Result(column = "curr_remaining", property = "ciRemainingEndDay", javaType = Long.class),
 		@Result(column = "take_in", property = "crSummInsert", javaType = Long.class),
 		@Result(column = "take_off", property = "ciSummInsert", javaType = Long.class),
 		@Result(column = "stat_Date", property = "statDate", javaType = Timestamp.class),
@@ -105,10 +103,10 @@ public interface ForecastForPeriodMapper extends IMapper {
 	@Delete("DELETE FROM T_CM_ENC_PERIOD_CURR WHERE ENC_PERIOD_ID IN (SELECT ID FROM T_CM_ENC_PERIOD WHERE ATM_ID = #{atmId} )")
 	void insertPeriodForecastData_deletePeriodCurr(@Param("atmId") Integer atmId);
 
-	@Delete("DELETE FROM T_CM_ENC_PERIOD_STAT WHERE ATM_ID = #{atmId} )")
+	@Delete("DELETE FROM T_CM_ENC_PERIOD_STAT WHERE ATM_ID = #{atmId}")
 	void insertPeriodForecastData_deletePeriodStat(@Param("atmId") Integer atmId);
 	
-	@Delete("DELETE FROM T_CM_ENC_PERIOD WHERE ATM_ID = #{atmId} )")
+	@Delete("DELETE FROM T_CM_ENC_PERIOD WHERE ATM_ID = #{atmId}")
 	void insertPeriodForecastData_deletePeriod(@Param("atmId") Integer atmId);
 	
 	@InsertProvider(type = ForecastForPeriodBuilder.class, method = "insertPeriodForecastData_insertPeriod")
@@ -143,7 +141,4 @@ public interface ForecastForPeriodMapper extends IMapper {
 			@Param("ciRemainingStartDay") Long ciRemainingStartDay, @Param("ciRemainingEndDay") Long ciRemainingEndDay,
 			@Param("crSummInsert") Long crSummInsert, @Param("crSummTakeOff") Long crSummTakeOff,
 			@Param("crRemainingStartDay") Long crRemainingStartDay, @Param("crRemainingEndDay") Long crRemainingEndDay);
-
-	@Flush
-	List<BatchResult> flush();
 }

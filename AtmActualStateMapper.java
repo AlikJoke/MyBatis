@@ -38,7 +38,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 19.02.2007
- * @version 1.0.1
+ * @version 1.0.2
  *
  */
 public interface AtmActualStateMapper extends IMapper {
@@ -226,10 +226,10 @@ public interface AtmActualStateMapper extends IMapper {
 			+ "CASH_IN_STAT_DATE,CASH_IN_ENCASHMENT_ID, LAST_UPDATE,"
 			+ "OUT_OF_CASH_OUT_DATE,OUT_OF_CASH_OUT_CURR,OUT_OF_CASH_OUT_RESP,"
 			+ "OUT_OF_CASH_IN_DATE,OUT_OF_CASH_IN_RESP, LAST_WITHDRAWAL_HOURS,LAST_ADDITION_HOURS,"
-			+ "CURR_REMAINING_ALERT) VALUES (#{atmId}, #{cashOutStatDate, jdbcType=TIMESTAMP}, #{cashOutStat, jdbcType=NUMERIC}, #{cashInStatDate, jdbcType=TIMESTAMP}, "
-			+ "#{cashInStat}, #{currTime, jdbcType=NUMERIC}, #{outOfCashOutDate, jdbcType=TIMESTAMP}, #{outOfCashOutCurr, jdbcType=NUMERIC}, #{outOfCashOutResp, jdbcType=NUMERIC}, "
-			+ "#{outOfCashInDate}, #{outOfCashInResp, jdbcType=NUMERIC}, #{cashOutHoursFromLastWithdrawal, jdbcType=NUMERIC}, "
-			+ "#{cashInHoursFromLastAddition, jdbcType=NUMERIC}, #{needCurrRemainingAlert, jdbcType=NUMERIC})")
+			+ "CURR_REMAINING_ALERT) VALUES (#{atmId, jdbcType=NUMERIC}, #{cashOutStatDate, jdbcType=TIMESTAMP}, #{cashOutStat, jdbcType=INTEGER}, #{cashInStatDate, jdbcType=TIMESTAMP}, "
+			+ "#{cashInStat}, #{currTime, jdbcType=INTEGER}, #{outOfCashOutDate, jdbcType=TIMESTAMP}, #{outOfCashOutCurr, jdbcType=INTEGER}, #{outOfCashOutResp, jdbcType=INTEGER}, "
+			+ "#{outOfCashInDate}, #{outOfCashInResp, jdbcType=INTEGER}, #{cashOutHoursFromLastWithdrawal, jdbcType=INTEGER}, "
+			+ "#{cashInHoursFromLastAddition, jdbcType=INTEGER}, #{needCurrRemainingAlert, jdbcType=INTEGER})")
 	void insertAtmActualStateItem(@Param("atmId") int atmId, @Param("cashOutStatDate") Timestamp cashOutStatDate,
 			@Param("cashOutStat") Integer cashOutStat, @Param("cashInStatDate") Timestamp cashInStatDate,
 			@Param("cashInStat") Integer cashInStat, @Param("currTime") Timestamp currTime,
@@ -273,12 +273,12 @@ public interface AtmActualStateMapper extends IMapper {
 			@Param("sec3Curr4") Double sec3Curr4);
 	
 	@Update(" UPDATE T_CM_ATM_ACTUAL_STATE "
-			+ "SET CASH_OUT_STAT_DATE = #{cashOutStatDate}, CASH_OUT_ENCASHMENT_ID = #{cashOutStat, jdbcType=NUMERIC}, "
-			+ "CASH_IN_STAT_DATE = #{cashInStatDate, jdbcType=TIMESTAMP}, CASH_IN_ENCASHMENT_ID = #{cashInStat, jdbcType=NUMERIC}, OUT_OF_CASH_OUT_DATE = #{outOfCashOutCurrDate, jdbcType=TIMESTAMP}, "
-			+ "OUT_OF_CASH_OUT_CURR = #{outOfCashOutCurr, jdbcType=NUMERIC}, OUT_OF_CASH_OUT_RESP = #{outOfCashOutResp, jdbcType=NUMERIC}, "
+			+ "SET CASH_OUT_STAT_DATE = #{cashOutStatDate, jdbcType=TIMESTAMP}, CASH_OUT_ENCASHMENT_ID = #{cashOutStat, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, "
+			+ "CASH_IN_STAT_DATE = #{cashInStatDate, jdbcType=TIMESTAMP}, CASH_IN_ENCASHMENT_ID = #{cashInStat, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, OUT_OF_CASH_OUT_DATE = #{outOfCashOutCurrDate, jdbcType=TIMESTAMP}, "
+			+ "OUT_OF_CASH_OUT_CURR = #{outOfCashOutCurr, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, OUT_OF_CASH_OUT_RESP = #{outOfCashOutResp, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, "
 			+ "OUT_OF_CASH_IN_DATE = #{outOfCashInDate, jdbcType=TIMESTAMP}, "
-			+ "OUT_OF_CASH_IN_RESP = #{outOfCashInResp, jdbcType=NUMERIC}, LAST_WITHDRAWAL_HOURS = #{cashOutHoursFromLastWithdrawal, jdbcType=NUMERIC}, LAST_ADDITION_HOURS = #{cashInHoursFromLastAddition, jdbcType=NUMERIC}, "
-			+ "CURR_REMAINING_ALERT = #{needCurrRemainingAlert} WHERE atm_id = #{atmId} ")
+			+ "OUT_OF_CASH_IN_RESP = #{outOfCashInResp, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, LAST_WITHDRAWAL_HOURS = #{cashOutHoursFromLastWithdrawal, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, LAST_ADDITION_HOURS = #{cashInHoursFromLastAddition, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, "
+			+ "CURR_REMAINING_ALERT = #{needCurrRemainingAlert} WHERE atm_id = #{atmId, javaType = Integer, jdbcType=NUMERIC, numericScale=0} ")
 	void updateAtmActualStateItem(@Param("cashOutStatDate") Timestamp cashOutStatDate,
 			@Param("cashOutStat") Integer cashOutStat, @Param("cashInStatDate") Timestamp cashInStatDate,
 			@Param("cashInStat") Integer cashInStat, @Param("outOfCashOutCurrDate") Timestamp outOfCashOutCurrDate,

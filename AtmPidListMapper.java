@@ -45,7 +45,7 @@ public interface AtmPidListMapper extends IMapper {
 			+ " select distinct atm_id from T_CM_CASHIN_R_CASS_STAT) ORDER BY atm_id ")
 	@ResultType(IntFilterItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<IntFilterItem> getAtmListFull();
+	List<IntFilterItem> getAtmListFull_withoutParams();
 
 	@ConstructorArgs({
 		@Arg(column = "ATM_GROUP_ID", javaType = Integer.class),
@@ -140,7 +140,7 @@ public interface AtmPidListMapper extends IMapper {
 	@ResultType(IntFilterItem.class)
 	@SelectProvider(type = AtmPidListBuilder.class, method = "getAtmListForGroupListBuilder")
 	@Options(useCache = true, fetchSize = 1000)
-	List<IntFilterItem> getAtmListForGroupList(@Param("sortByOutOfCurrDate") Boolean sortByOutOfCurrDate);
+	List<IntFilterItem> getAtmListForGroupList_sort(@Param("sortByOutOfCurrDate") Boolean sortByOutOfCurrDate);
 	
 	@Results({
 		@Result(column = "ATM_ID", property = "value", javaType = Integer.class),
@@ -150,13 +150,13 @@ public interface AtmPidListMapper extends IMapper {
 	@ResultType(IntFilterItem.class)
 	@SelectProvider(type = AtmPidListBuilder.class, method = "getAtmListForGroupListBuilder_inst")
 	@Options(useCache = true, fetchSize = 1000)
-	List<IntFilterItem> getAtmListForGroupList(@Param("sortByOutOfCurrDate") Boolean sortByOutOfCurrDate,
+	List<IntFilterItem> getAtmListForGroupList_sortInst(@Param("sortByOutOfCurrDate") Boolean sortByOutOfCurrDate,
 			@Param("instList") List<Institute> instList);
 	
 	@Result(column = "atm_id", javaType = Integer.class)
 	@ResultType(Integer.class)
 	@Select("SELECT distinct a2ag.atm_id FROM t_cm_atm2atm_group a2ag "
-			+ "join t_cm_atm a on (a2ag.atm_id = a.atm_id) WHERE a2ag.atm_group_id in (#{atmGroups})")
+			+ "join t_cm_atm a on (a2ag.atm_id = a.atm_id) WHERE a2ag.atm_group_id in (#{atmGroups, jdbcType = NVARCHAR})")
 	@Options(useCache = true, fetchSize = 1000)
 	List<Integer> getAtmListForGroupList(@Param("atmGroups") String atmGroups);
 	
@@ -174,7 +174,7 @@ public interface AtmPidListMapper extends IMapper {
 			+ "WHERE agr.ATM_GROUP_ID = #{groupId} ORDER BY atm_id ")
 	@ResultType(AtmGroupAtmItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmGroupAtmItem> getAtmListForGroup(@Param("groupId") Integer groupId);
+	List<AtmGroupAtmItem> getAtmListForGroupByGroupId(@Param("groupId") Integer groupId);
 	
 	@ConstructorArgs({
 		@Arg(column = "ATM_ID", javaType = Integer.class),
@@ -213,7 +213,7 @@ public interface AtmPidListMapper extends IMapper {
 	@SelectProvider(type = AtmPidListBuilder.class, method = "getAtmListFullBuilder")
 	@ResultType(AtmGroupAtmItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmGroupAtmItem> getAtmListFull(@Param("personId") String personId, @Param("typeId") Integer typeId,
+	List<AtmGroupAtmItem> getAtmListFull_withoutInst(@Param("personId") String personId, @Param("typeId") Integer typeId,
 			@Param("groupId") Integer groupId);
 	
 	@ConstructorArgs({
@@ -259,7 +259,7 @@ public interface AtmPidListMapper extends IMapper {
 	@SelectProvider(type = AtmPidListBuilder.class, method = "getAvaliableAtmsListForGroupBuilder")
 	@ResultType(AtmGroupAtmItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmGroupAtmItem> getAvaliableAtmsListForGroup(@Param("groupId") Integer groupId,
+	List<AtmGroupAtmItem> getAvaliableAtmsListForGroup_inst(@Param("groupId") Integer groupId,
 			@Param("typeId") Integer typeId, @Param("instList") List<Institute> instList);
 	
 	@ConstructorArgs({
@@ -291,7 +291,7 @@ public interface AtmPidListMapper extends IMapper {
 	@SelectProvider(type = AtmPidListBuilder.class, method = "getAvaliableAtmsListForAttributeGroupBuilder")
 	@ResultType(AtmGroupAtmItem.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmGroupAtmItem> getAvaliableAtmsListForAttributeGroup(@Param("groupId") Integer groupId,
+	List<AtmGroupAtmItem> getAvaliableAtmsListForAttributeGroup_inst(@Param("groupId") Integer groupId,
 			@Param("typeId") Integer typeId, @Param("instList") List<Institute> instList);
 	
 	@Results({
