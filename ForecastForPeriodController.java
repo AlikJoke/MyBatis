@@ -183,9 +183,7 @@ public class ForecastForPeriodController {
 							encashment.getEncType().getId(), encashment.getForecastResp(), item.isCashInExists(),
 							encashment.isEmergencyEncashment());
 
-					int encPlanID = session
-							.selectOne("SELECT " + ORMUtils.getCurrentSequence(session, "SQ_CM_ENC_PLAN_ID") + " as SQ "
-									+ ORMUtils.getFromDummyExpression(session));
+					int encPlanID = mapper.getSQ(session);
 					for (Pair curr : encashment.getAtmCurrencies())
 						mapper.insertPeriodForecastData_insertPeriodCurr(encPlanID, curr.getKey(), curr.getLabel());
 

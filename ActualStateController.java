@@ -349,6 +349,8 @@ public class ActualStateController {
 
 				if (cashInStat != null && cashInStat.getValue() != null)
 					cashInStatValue = cashInStat.getValue();
+				else
+					cashInStatValue = 0;
 
 				if (forecast.getOutOfCashOutDate() != null) {
 					outOfCashOutDate = new Timestamp(

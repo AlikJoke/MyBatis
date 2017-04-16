@@ -14,6 +14,7 @@ import org.apache.ibatis.annotations.ResultType;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.session.SqlSession;
 
 import ru.bpc.cm.cashmanagement.orm.builders.ForecastForPeriodBuilder;
 import ru.bpc.cm.config.IMapper;
@@ -141,4 +142,10 @@ public interface ForecastForPeriodMapper extends IMapper {
 			@Param("ciRemainingStartDay") Long ciRemainingStartDay, @Param("ciRemainingEndDay") Long ciRemainingEndDay,
 			@Param("crSummInsert") Long crSummInsert, @Param("crSummTakeOff") Long crSummTakeOff,
 			@Param("crRemainingStartDay") Long crRemainingStartDay, @Param("crRemainingEndDay") Long crRemainingEndDay);
+	
+	@Result(column = "SQ", javaType = Integer.class)
+	@SelectProvider(type = ForecastForPeriodBuilder.class, method = "getSQBuilder")
+	@ResultType(Integer.class)
+	@Options(useCache = true)
+	Integer getSQ(@Param("session") SqlSession session);
 }

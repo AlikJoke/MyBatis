@@ -273,12 +273,12 @@ public interface AtmActualStateMapper extends IMapper {
 			@Param("sec3Curr4") Double sec3Curr4);
 	
 	@Update(" UPDATE T_CM_ATM_ACTUAL_STATE "
-			+ "SET CASH_OUT_STAT_DATE = #{cashOutStatDate, jdbcType=TIMESTAMP}, CASH_OUT_ENCASHMENT_ID = #{cashOutStat, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, "
-			+ "CASH_IN_STAT_DATE = #{cashInStatDate, jdbcType=TIMESTAMP}, CASH_IN_ENCASHMENT_ID = #{cashInStat, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, OUT_OF_CASH_OUT_DATE = #{outOfCashOutCurrDate, jdbcType=TIMESTAMP}, "
-			+ "OUT_OF_CASH_OUT_CURR = #{outOfCashOutCurr, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, OUT_OF_CASH_OUT_RESP = #{outOfCashOutResp, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, "
-			+ "OUT_OF_CASH_IN_DATE = #{outOfCashInDate, jdbcType=TIMESTAMP}, "
-			+ "OUT_OF_CASH_IN_RESP = #{outOfCashInResp, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, LAST_WITHDRAWAL_HOURS = #{cashOutHoursFromLastWithdrawal, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, LAST_ADDITION_HOURS = #{cashInHoursFromLastAddition, javaType = Integer, jdbcType=NUMERIC, numericScale=0}, "
-			+ "CURR_REMAINING_ALERT = #{needCurrRemainingAlert} WHERE atm_id = #{atmId, javaType = Integer, jdbcType=NUMERIC, numericScale=0} ")
+			+ "SET CASH_OUT_STAT_DATE = #{cashOutStatDate, jdbcType=DATE}, CASH_OUT_ENCASHMENT_ID = #{cashOutStat}, "
+			+ "CASH_IN_STAT_DATE = #{cashInStatDate, jdbcType=DATE}, OUT_OF_CASH_OUT_DATE = #{outOfCashOutCurrDate, jdbcType=DATE}, "
+			+ "OUT_OF_CASH_OUT_CURR = #{outOfCashOutCurr, javaType = Integer, jdbcType=INTEGER}, OUT_OF_CASH_OUT_RESP = #{outOfCashOutResp}, "
+			+ "OUT_OF_CASH_IN_DATE = #{outOfCashInDate, jdbcType=DATE}, CASH_IN_ENCASHMENT_ID = #{cashInStat}, "
+			+ "OUT_OF_CASH_IN_RESP = #{outOfCashInResp}, LAST_WITHDRAWAL_HOURS = #{cashOutHoursFromLastWithdrawal}, LAST_ADDITION_HOURS = #{cashInHoursFromLastAddition}, "
+			+ "CURR_REMAINING_ALERT = #{needCurrRemainingAlert} WHERE atm_id = #{atmId} ")
 	void updateAtmActualStateItem(@Param("cashOutStatDate") Timestamp cashOutStatDate,
 			@Param("cashOutStat") Integer cashOutStat, @Param("cashInStatDate") Timestamp cashInStatDate,
 			@Param("cashInStat") Integer cashInStat, @Param("outOfCashOutCurrDate") Timestamp outOfCashOutCurrDate,
