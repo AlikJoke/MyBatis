@@ -39,7 +39,7 @@ public class AtmActualStateBuilder {
 				+ "COALESCE(MAIN_CODE_A3,'NOT_DEFINED') as MAIN_CODE_A3, "
 				+ "SECONDARY_CODE_A3, SECONDARY2_CODE_A3, SECONDARY3_CODE_A3,"
 				+ "OUT_OF_CASH_OUT_DATE, OUT_OF_CASH_OUT_CURR, OUT_OF_CASH_OUT_RESP,"
-				+ "OUT_OF_CASH_IN_DATE, OUT_OF_CASH_IN_RESP, " + "STAT_LOAD_DATE, ATM_NAME , "
+				+ "OUT_OF_CASH_IN_DATE, OUT_OF_CASH_IN_RESP, " + "STAT_LOAD_DATE, ATM_NAME, ADDRESS, "
 				+ "LAST_WITHDRAWAL_HOURS, LAST_ADDITION_HOURS," + "EMERGENCY_ENCASHMENT, DATE_FORTHCOMING_ENCASHMENT,"
 				+ "IS_APPROVED, DAYS_UNTIL_ENCASHMENT, CASH_IN_STATE, CURR_REMAINING_ALERT, "
 				+ "MAIN_CURR_CI,MAIN_CURR_CO,MAIN_CURR_CI_LAST_HOUR_DIFF,MAIN_CURR_CO_LAST_HOUR_DIFF,MAIN_CURR_CI_LAST_THREE_HOURS,MAIN_CURR_CO_LAST_THREE_HOURS, "
@@ -67,8 +67,10 @@ public class AtmActualStateBuilder {
 		QueryConstructor querConstr = new QueryConstructor();
 		querConstr.setQueryBody(sql.toString(), true);
 
-		querConstr.addElementIfNotNull("atm_id", "AND", "ac.EXTERNAL_ATM_ID",
-				DbTextUtil.getOperationType(addFilter.getAtmID()), addFilter.getAtmID());
+		querConstr.addElementIfNotNull("atm_id", "AND", "ac.ATM_ID", DbTextUtil.getOperationType(addFilter.getAtmID()),
+				addFilter.getAtmID());
+		querConstr.addElementIfNotNull("external_id", "AND", "ac.EXTERNAL_ATM_ID",
+				DbTextUtil.getOperationType(addFilter.getExtAtmID()), addFilter.getExtAtmID());
 
 		if (addFilter.getEncashmenFilterMode() != EncashmentFilterMode.NONE) {
 			querConstr.addElementIfNotNull("date_forthcoming_enc", "AND", "DATE_FORTHCOMING_ENCASHMENT", ">=",
@@ -80,7 +82,7 @@ public class AtmActualStateBuilder {
 		if (TextUtil.isNotEmpty(addFilter.getNameAndAddress())) {
 			querConstr.addElement("atm_name", "AND ( ", "ATM_NAME",
 					DbTextUtil.getOperationType(addFilter.getNameAndAddress()), addFilter.getNameAndAddress(), false);
-			querConstr.addElement("address", "OR", "address",
+			querConstr.addElement("address", "OR", "ADDRESS",
 					DbTextUtil.getOperationType(addFilter.getNameAndAddress()), addFilter.getNameAndAddress(), false);
 			querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 		}
@@ -119,19 +121,19 @@ public class AtmActualStateBuilder {
 			throw new RuntimeException("Can't create valid query", e);
 		}
 	}
-	
+
 	public String getAtmDeviceStateBuilder_limit(Map<String, Object> params) {
 		String limit = (String) params.get("limit");
 		return "SELECT ATM_STATE FROM T_CM_ATM_ACTUAL_STATE WHERE ATM_ID = #{atmId} " + limit;
 	}
-	
+
 	public String getCashOutHoursFromLastWithdrawalBuilder_limit(Map<String, Object> params) {
 		String limit = (String) params.get("limit");
 		return "select t1.stat_date AS STAT_DATE, t2.cass_count " + "from (select atm_id, max(stat_date) as stat_date "
 				+ "from T_CM_CASHOUT_CASS_STAT where cass_count<>0 group by atm_id) t1, T_CM_CASHOUT_CASS_STAT t2 "
 				+ "where t1.atm_id=t2.atm_id and t1.stat_date=t2.stat_date and t1.atm_id = #{atmId} " + limit;
 	}
-	
+
 	public String getCashInHoursFromLastAdditionBuilder_limit(Map<String, Object> params) {
 		String limit = (String) params.get("limit");
 		return "select t1.stat_date AS STAT_DATE, t2.bills_count " + "from (select atm_id, max(stat_date) as stat_date "

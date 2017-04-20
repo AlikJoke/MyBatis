@@ -388,6 +388,24 @@ public class CmCommonController {
 		return attributes;
 	}
 
+	public static int getAtmCassetteCapacity(ISessionHolder sessionHolder, int atmId, int cassCurr, int cassValue) {
+		int capacity = 0;
+		SqlSession session = sessionHolder.getSession(getMapperClass());
+		try {
+			List<Integer> capacities = session.getMapper(getMapperClass()).getAtmCassetteCapacity(atmId, cassCurr,
+					cassValue);
+			if (!capacities.isEmpty())
+				capacity = capacities.get(0);
+			else
+				capacity = 0;
+		} catch (Exception e) {
+			logger.error("", e);
+		} finally {
+			session.close();
+		}
+		return capacity;
+	}
+
 	public static Double convertValue(ISessionHolder sessionHolder, int srcCurr, int destCurr, Double value,
 			String instId) {
 		if (srcCurr == 0 || destCurr == 0 || srcCurr == destCurr) {

@@ -5,6 +5,17 @@ import java.sql.Statement;
 
 import org.apache.ibatis.session.SqlSession;
 
+import ru.bpc.cm.utils.db.JdbcUtils;
+
+/**
+ * Класс, содержащий различные статические методы, требующиеся для работы с
+ * базой данных. Является ORM-аналогом {@link JdbcUtils}.
+ * 
+ * @author Alimurad A. Ramazanov
+ * @since 09.03.2017
+ * @version 1.1.4
+ *
+ */
 public class ORMUtils {
 
 	public static String getNextSequence(SqlSession session, String seqName) throws SQLException {
@@ -28,6 +39,19 @@ public class ORMUtils {
 			return " limit 1 ";
 		} else {
 			return " where rownum = 1 ";
+		}
+	}
+
+	public static String getSingleRowExpression(SqlSession session) {
+		String DbName = getDbName(session);
+		if (DbName == "Oracle") {
+			return " and rownum = 1 ";
+		} else if (DbName == "DB2") {
+			return " and rownum = 1 ";
+		} else if (DbName == "PostgreSQL") {
+			return " limit 1 ";
+		} else {
+			return " and rownum = 1 ";
 		}
 	}
 

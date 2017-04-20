@@ -80,7 +80,9 @@ public class ForecastNominalsController {
 				item.setCassCount(1);
 				item.setCurrency(currency);
 				item.setMinCountInOneCass(minCountInOneCass);
-				item.setMaxCountInOneCass(maxCountInOneCass);
+
+				if (item.getMaxCountInOneCass() <= 0)
+					item.setMaxCountInOneCass(maxCountInOneCass);
 
 				NominalCountItem countItem = mapper.getCoCurrNominalsFromAtmCassettes_count(encList, currency, atmId,
 						item.getDenom());
@@ -119,7 +121,9 @@ public class ForecastNominalsController {
 				item.setCassCount(1);
 				item.setCurrency(currency);
 				item.setMinCountInOneCass(minCountInOneCass);
-				item.setMaxCountInOneCass(maxCountInOneCass);
+
+				if (item.getMaxCountInOneCass() <= 0)
+					item.setMaxCountInOneCass(maxCountInOneCass);
 
 				NominalCountItem countItem = mapper.getCrCurrNominalsFromAtmCassettes_count(encList, currency, atmId,
 						item.getDenom());
@@ -271,12 +275,12 @@ public class ForecastNominalsController {
 		Date lastStatDate = null;
 		try {
 			ForecastNominalsMapper mapper = session.getMapper(getMapperClass());
-			ObjectPair<Double, Timestamp> denomRemainingWithDate = mapper.getDenomRemaining_withStatDate(atmId,
+			List<ObjectPair<Double, Timestamp>> denomRemainingWithDate = mapper.getDenomRemaining_withStatDate(atmId,
 					currency, encID, new Timestamp(startDate.getTime()), denom);
 
-			if (denomRemainingWithDate != null) {
-				res = denomRemainingWithDate.getKey();
-				lastStatDate = denomRemainingWithDate.getValue();
+			if (!denomRemainingWithDate.isEmpty()) {
+				res = denomRemainingWithDate.get(0).getKey();
+				lastStatDate = denomRemainingWithDate.get(0).getValue();
 			}
 
 			Double denomRemaining = mapper.getDenomRemaining(atmId, currency, encID,

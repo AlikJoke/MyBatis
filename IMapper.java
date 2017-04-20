@@ -11,11 +11,11 @@ import ejbs.cm.svcm.SessionHolder;
 /**
  * Интерфейс-маркер, наследовать который должен каждый интерфейс, содержащий
  * маппинг аннотациями MyBatis. Необходимость обусловлена тем, что в противном
- * случае в сессии не будет маппера для этой сущности.
+ * случае результаты работы маппера не будут кэшироваться.
  * 
  * @author Alimurad A. Ramazanov
  * @since 07.01.2017
- * @version 1.0.0
+ * @version 1.0.2
  *
  */
 @CacheNamespace(implementation = org.mybatis.caches.ehcache.EhcacheCache.class)

@@ -25,7 +25,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 04.03.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface ForecastNominalsMapper extends IMapper {
@@ -46,8 +46,9 @@ public interface ForecastNominalsMapper extends IMapper {
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "cassNum", javaType = Integer.class),
 		@Result(column = "CASS_VALUE", property = "denom", javaType = Integer.class),
+		@Result(column = "CASS_CAPACITY", property = "maxCountInOneCass", javaType = Integer.class)
 	})
-	@Select("SELECT CASS_NUMBER,CASS_VALUE FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId} AND CASS_CURR = #{curr} "
+	@Select("SELECT CASS_NUMBER,CASS_VALUE, CASS_CAPACITY FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId} AND CASS_CURR = #{curr} "
 			+ "AND CASS_TYPE = #{cassTypeId}")
 	@Options(useCache = true, fetchSize = 1000)
 	@ResultType(NominalItem.class)
@@ -68,8 +69,9 @@ public interface ForecastNominalsMapper extends IMapper {
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "cassNum", javaType = Integer.class),
 		@Result(column = "CASS_VALUE", property = "denom", javaType = Integer.class),
+		@Result(column = "CASS_CAPACITY", property = "maxCountInOneCass", javaType = Integer.class)
 	})
-	@Select("SELECT CASS_NUMBER,CASS_VALUE FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId} "
+	@Select("SELECT CASS_NUMBER,CASS_VALUE, CASS_CAPACITY FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId} "
 			+ "AND CASS_CURR = #{curr} AND CASS_TYPE = #{cassTypeId}")
 	@Options(useCache = true, fetchSize = 1000)
 	@ResultType(NominalItem.class)
@@ -108,16 +110,16 @@ public interface ForecastNominalsMapper extends IMapper {
 	@ResultType(Integer.class)
 	@Select("SELECT MIN(DENOM) as DENOM FROM T_CM_CURR_DENOM WHERE CURR_CODE = #{curr} AND DENOM > #{denom}")
 	Integer changeNominals(@Param("curr") Integer curr, @Param("denom") Integer denom);
-	
-	@ConstructorArgs({
-		@Arg(column = "SUMM", javaType = Double.class),
-		@Arg(column = "STAT_DATE", javaType = Timestamp.class)
+
+	@Results({
+		@Result(column = "SUMM", property = "key", javaType = Double.class),
+		@Result(column = "STAT_DATE", property = "value", javaType = Timestamp.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("SELECT DENOM_REMAINING AS SUMM,STAT_DATE FROM V_CM_CASHOUT_DENOM_STAT WHERE ATM_ID = #{atmId} "
 			+ " AND DENOM_CURR = #{curr} AND ENCASHMENT_ID = #{encId} AND STAT_DATE <= #{startDate} AND DENOM_VALUE = #{denom} "
 			+ " ORDER BY STAT_DATE desc,ENCASHMENT_ID desc")
-	ObjectPair<Double, Timestamp> getDenomRemaining_withStatDate(@Param("atmId") Integer atmId,
+	List<ObjectPair<Double, Timestamp>> getDenomRemaining_withStatDate(@Param("atmId") Integer atmId,
 			@Param("curr") Integer curr, @Param("encId") Integer encId, @Param("startDate") Timestamp startDate,
 			@Param("denom") Integer denom);
 

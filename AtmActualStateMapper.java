@@ -38,7 +38,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 19.02.2007
- * @version 1.0.2
+ * @version 1.0.3
  *
  */
 public interface AtmActualStateMapper extends IMapper {
@@ -245,7 +245,7 @@ public interface AtmActualStateMapper extends IMapper {
 			+ "MAIN_CURR_CO_LAST_THREE_HOURS, " + "SEC_CURR_CI, " + "SEC_CURR_CO, " + "SEC_CURR_CI_LAST_HOUR_DIFF, "
 			+ "SEC_CURR_CO_LAST_HOUR_DIFF, " + "SEC_CURR_CI_LAST_THREE_HOURS, " + "SEC_CURR_CO_LAST_THREE_HOURS, "
 			+ "SEC2_CURR_CI, " + "SEC2_CURR_CO, " + "SEC2_CURR_CI_LAST_HOUR_DIFF, " + "SEC2_CURR_CO_LAST_HOUR_DIFF, "
-			+ "SEC2_CURR_CI_LAST_THREE_HOURS, " + "SEC2_CURR_CO_LAST_THREE_HOURS) " + "SEC3_CURR_CI, "
+			+ "SEC2_CURR_CI_LAST_THREE_HOURS, " + "SEC2_CURR_CO_LAST_THREE_HOURS " + "SEC3_CURR_CI, "
 			+ "SEC3_CURR_CO, " + "SEC3_CURR_CI_LAST_HOUR_DIFF, " + "SEC3_CURR_CO_LAST_HOUR_DIFF, "
 			+ "SEC3_CURR_CI_LAST_THREE_HOURS, " + "SEC3_CURR_CO_LAST_THREE_HOURS) "
 			+ "VALUES (#{atmId}, #{avgStatRecInCurrLastHourDemand, jdbcType=NUMERIC}, #{avgStatOutLastHourDemand, jdbcType=NUMERIC}, #{mainCurrInDifference, jdbcType=NUMERIC}, "
@@ -325,24 +325,30 @@ public interface AtmActualStateMapper extends IMapper {
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "number", javaType = Integer.class),
 		@Result(column = "CASS_VALUE", property = "denom", javaType = Integer.class),
-		@Result(column = "CASS_CURR", property = "curr", javaType = Integer.class)
+		@Result(column = "CASS_CURR", property = "curr", javaType = Integer.class),
+		@Result(column = "CASS_CAPACITY", property = "capacity", javaType = Integer.class)
 	})
-	@Select("SELECT distinct CASS_NUMBER,CASS_VALUE,CASS_CURR " + "FROM T_CM_CASHOUT_CASS_STAT "
-			+ "WHERE encashment_id = #{encId} and atm_id = #{atmId} ")
+	@Select("SELECT distinct cstat.CASS_NUMBER,cstat.CASS_VALUE,cstat.CASS_CURR,NVL(cass.CASS_CAPACITY,0) as CASS_CAPACITY "
+			+ "FROM T_CM_CASHOUT_CASS_STAT cstat "
+			+ "left outer join T_CM_ATM_CASSETTES cass on (cstat.atm_id=cass.atm_id and cstat.cass_number=cass.cass_number and cass.cass_type=#{typeId}) "
+			+ "WHERE cstat.encashment_id = #{encId} and cstat.atm_id = #{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmCassetteItem> getCashOutCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId,
-			ResultHandler<AtmCassetteItem> handler);
+	List<AtmCassetteItem> getCashOutCassettes(@Param("typeId") Integer typeId, @Param("encId") Integer encId,
+			@Param("atmId") Integer atmId, ResultHandler<AtmCassetteItem> handler);
 
 	@Results({
 		@Result(column = "CASS_NUMBER", property = "number", javaType = Integer.class),
 		@Result(column = "CASS_VALUE", property = "denom", javaType = Integer.class),
-		@Result(column = "CASS_CURR", property = "curr", javaType = Integer.class)
+		@Result(column = "CASS_CURR", property = "curr", javaType = Integer.class),
+		@Result(column = "CASS_CAPACITY", property = "capacity", javaType = Integer.class)
 	})
-	@Select("SELECT distinct CASS_NUMBER,CASS_VALUE,CASS_CURR " + "FROM T_CM_CASHOUT_CASS_STAT "
-			+ "WHERE encashment_id = #{encId} and atm_id = #{atmId} ")
+	@Select("SELECT distinct cstat.CASS_NUMBER,cstat.CASS_VALUE,cstat.CASS_CURR,NVL(cass.CASS_CAPACITY,0) as CASS_CAPACITY "
+			+ "FROM T_CM_CASHIN_R_CASS_STAT cstat "
+			+ "left outer join T_CM_ATM_CASSETTES cass on (cstat.atm_id=cass.atm_id and cstat.cass_number=cass.cass_number and cass.cass_type=#{typeId}) "
+			+ "WHERE cstat.cash_in_encashment_id = #{encId} and cstat.atm_id = #{atmId} ")
 	@Options(useCache = true, fetchSize = 1000)
-	List<AtmCassetteItem> getCashInRecyclingCassettes(@Param("encId") Integer encId, @Param("atmId") Integer atmId,
-			ResultHandler<AtmCassetteItem> handler);
+	List<AtmCassetteItem> getCashInRecyclingCassettes(@Param("typeId") Integer typeId, @Param("encId") Integer encId,
+			@Param("atmId") Integer atmId, ResultHandler<AtmCassetteItem> handler);
 
 	@Result(column = "vcheck", javaType = Integer.class)
 	@Select("SELECT count(1) as vcheck FROM T_CM_ATM_CASSETTES where ATM_ID = #{atmId} "

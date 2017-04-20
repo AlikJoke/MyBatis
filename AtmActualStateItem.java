@@ -181,7 +181,7 @@ public class AtmActualStateItem implements Serializable {
 		this.cashInState = cashInState == null ? 0 : cashInState;
 		this.atmID = atmID;
 		this.extAtmId = extAtmId;
-		this.desc = CmUtils.getAtmFullAdrress(this.state, this.city, this.street);
+		this.desc = CmUtils.getAtmFullAdrress(this.state, " " + this.city, " " + this.street);
 		this.cashOutCassettes = new ArrayList<AtmCashOutCassetteItem>();
 		this.cashInRCassettes = new ArrayList<AtmRecyclingCassetteItem>();
 		this.cashInInit = cashInInit == null ? 0 : cashInInit;

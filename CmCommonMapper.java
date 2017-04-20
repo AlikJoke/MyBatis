@@ -31,7 +31,7 @@ import ru.bpc.cm.utils.Pair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 24.02.2017
- * @version 1.0.1
+ * @version 1.0.2
  *
  */
 public interface CmCommonMapper extends IMapper {
@@ -144,6 +144,13 @@ public interface CmCommonMapper extends IMapper {
 	@Options(useCache = true, fetchSize = 1000)
 	List<ObjectPair<Integer, String>> getAtmAttributes(@Param("typeId") Integer typeId, @Param("atmId") Integer atmId);
 	
+	@Select("SELECT CASS_CAPACITY FROM T_CM_ATM_CASSETTES WHERE ATM_ID = #{atmId} "
+			+ "AND CASS_CURR = #{cassCurr} AND CASS_VALUE = #{cassValue} ")
+	@Result(column = "CASS_CAPACITY", javaType = Integer.class)
+	@ResultType(Integer.class)
+	List<Integer> getAtmCassetteCapacity(@Param("atmId") Integer atmId, @Param("cassCurr") Integer cassCurr,
+			@Param("cassValue") Integer cassValue);
+
 	@Results({ 
 		@Result(column = "MULTIPLE_FLAG", property = "key", javaType = String.class),
 		@Result(column = "CNVT_RATE", property = "value", javaType = Double.class) 

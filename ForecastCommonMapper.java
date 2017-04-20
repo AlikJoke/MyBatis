@@ -3,11 +3,10 @@ package ru.bpc.cm.forecasting.orm;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.apache.ibatis.annotations.Arg;
-import org.apache.ibatis.annotations.ConstructorArgs;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultType;
+import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
 import ru.bpc.cm.config.IMapper;
@@ -24,9 +23,9 @@ import ru.bpc.cm.utils.ObjectPair;
  */
 public interface ForecastCommonMapper extends IMapper {
 
-	@ConstructorArgs({
-		@Arg(column = "VALUE", javaType = Double.class),
-		@Arg(column = "VALUE", javaType = String.class)
+	@Results({
+		@Result(column = "VALUE", property = "key", javaType = Double.class),
+		@Result(column = "VALUE", property = "value", javaType = String.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("select aga.value from T_CM_ATM2ATM_GROUP agr join T_CM_ATM_GROUP ag on (ag.id = agr.atm_group_id) "
@@ -36,9 +35,9 @@ public interface ForecastCommonMapper extends IMapper {
 	List<ObjectPair<Double, String>> getEncCostPercents(@Param("attrId") Integer attrId, @Param("groupId") Integer groupId,
 			@Param("atmId") Integer atmId);
 	
-	@ConstructorArgs({
-		@Arg(column = "DATE_FORTHCOMING_ENCASHMENT", javaType = Timestamp.class),
-		@Arg(column = "ENC_COUNT", javaType = Integer.class)
+	@Results({
+		@Result(column = "DATE_FORTHCOMING_ENCASHMENT", property = "key", javaType = Timestamp.class),
+		@Result(column = "ENC_COUNT", property = "value", javaType = Integer.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("SELECT trunc(DATE_FORTHCOMING_ENCASHMENT) as DATE_FORTHCOMING_ENCASHMENT, count(distinct ENC_PLAN_ID) as ENC_COUNT "
@@ -48,9 +47,9 @@ public interface ForecastCommonMapper extends IMapper {
 	List<ObjectPair<Timestamp, Integer>> getEncMapDaysPlan(@Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("atmCount") Integer atmCount);
 	
-	@ConstructorArgs({
-		@Arg(column = "DATE_FORTHCOMING_ENCASHMENT", javaType = Timestamp.class),
-		@Arg(column = "ENC_COUNT", javaType = Integer.class)
+	@Results({
+		@Result(column = "DATE_FORTHCOMING_ENCASHMENT", property = "key", javaType = Timestamp.class),
+		@Result(column = "ENC_COUNT", property = "value", javaType = Integer.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("SELECT trunc(DATE_FORTHCOMING_ENCASHMENT) as DATE_FORTHCOMING_ENCASHMENT, count(distinct ID) as ENC_COUNT "
@@ -60,9 +59,9 @@ public interface ForecastCommonMapper extends IMapper {
 	List<ObjectPair<Timestamp, Integer>> getEncMapDaysPeriod(@Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("atmCount") Integer atmCount);
 
-	@ConstructorArgs({
-		@Arg(column = "DATE_FORTHCOMING_ENCASHMENT", javaType = Timestamp.class),
-		@Arg(column = "ENC_COUNT", javaType = Integer.class)
+	@Results({
+		@Result(column = "DATE_FORTHCOMING_ENCASHMENT", property = "key", javaType = Timestamp.class),
+		@Result(column = "ENC_COUNT", property = "value", javaType = Integer.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("SELECT trunc(DATE_FORTHCOMING_ENCASHMENT) as DATE_FORTHCOMING_ENCASHMENT, count(distinct ID) as ENC_COUNT "

@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.ibatis.annotations.Arg;
 import org.apache.ibatis.annotations.ConstructorArgs;
 import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
@@ -15,7 +14,6 @@ import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
-import org.apache.ibatis.executor.BatchResult;
 
 import ru.bpc.cm.cashmanagement.orm.builders.HistoryDemandBuilder;
 import ru.bpc.cm.cashmanagement.orm.handlers.DisabledCNTTypeHandler;
@@ -79,7 +77,4 @@ public interface HistoryDemandMapper extends IMapper {
 			+ "AND CL_DATE = #{calTime} AND CURRENCY = #{curr} AND CURRENCY_MODE = #{modeId}")
 	void changeAtmCalendarHour(@Param("disabled") Integer disabled, @Param("atmId") String atmId,
 			@Param("calTime") Date calTime, @Param("curr") Integer curr, @Param("modeId") Integer modeId);
-	
-	@Flush
-	List<BatchResult> flush();
 }

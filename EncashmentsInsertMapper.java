@@ -4,8 +4,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.apache.ibatis.annotations.Arg;
-import org.apache.ibatis.annotations.ConstructorArgs;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.DeleteProvider;
 import org.apache.ibatis.annotations.Insert;
@@ -13,6 +11,7 @@ import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultType;
+import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
@@ -135,9 +134,9 @@ public interface EncashmentsInsertMapper extends IMapper {
 	Integer getExistingPlanId(@Param("atmId") Integer atmId, @Param("dateForCheck") Date dateForCheck,
 			@Param("limit") String limit);
 	
-	@ConstructorArgs({
-		@Arg(column = "ROUTE_STATUS", javaType = Integer.class),
-		@Arg(column = "DATE_FORTHCOMING_ENCASHMENT", javaType = Date.class)
+	@Results({
+		@Result(column = "ROUTE_STATUS", property = "key", javaType = Integer.class),
+		@Result(column = "DATE_FORTHCOMING_ENCASHMENT", property = "value", javaType = Date.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("Select route.ROUTE_STATUS, pnt.VISITED_FLAG, plan.DATE_FORTHCOMING_ENCASHMENT from T_CM_ROUTE route, T_CM_ROUTE_POINT pnt, T_CM_ENC_PLAN plan "
@@ -147,9 +146,9 @@ public interface EncashmentsInsertMapper extends IMapper {
 	@Delete("delete from T_CM_ROUTE_POINT where POINT_SRC_ID=#{srcId}")
 	void ensureRouteConsistencyForEnc_deleteRoutePoint(@Param("srcId") Integer srcId);
 	
-	@ConstructorArgs({
-		@Arg(column = "ORG_ID", javaType = Integer.class),
-		@Arg(column = "ROUTE_DATE", javaType = Date.class)
+	@Results({
+		@Result(column = "ORG_ID", property = "key", javaType = Integer.class),
+		@Result(column = "ROUTE_DATE", property = "value", javaType = Date.class)
 	})
 	@ResultType(ObjectPair.class)
 	@Select("Select route.ID, route.ORG_ID, route.ROUTE_DATE from T_CM_ROUTE route where route.ID=#{id}")

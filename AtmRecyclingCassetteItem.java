@@ -4,50 +4,62 @@ import java.io.Serializable;
 
 import ru.bpc.cm.items.enums.AtmCassetteType;
 
-public class AtmRecyclingCassetteItem extends AtmCassetteItem implements Serializable{
+public class AtmRecyclingCassetteItem extends AtmCassetteItem implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private int amountOut;
-    private int amountIn;
-    private int amountInit;
-    private int amountLeft;
-    private int amountLeftFE;
-    private String codeA3;
-    private String pbClass;
+	private int amountOut;
+	private int amountIn;
+	private int amountInit;
+	private int amountLeft;
+	private int amountLeftFE;
+	private String codeA3;
+	private String pbClass;
 
-    public AtmRecyclingCassetteItem() {
-    	
-    }
-    
-    public AtmRecyclingCassetteItem(int number, int denom, int curr, boolean balanceAlert) {
-		super(number, denom, curr, AtmCassetteType.CASH_OUT_CASS, balanceAlert);
+	public AtmRecyclingCassetteItem() {
+		super();
 	}
-    
+
+	public AtmRecyclingCassetteItem(int number, int denom, int curr, boolean balanceAlert) {
+		super(number, denom, 0, curr, AtmCassetteType.CASH_OUT_CASS, balanceAlert);
+	}
+
+	public AtmRecyclingCassetteItem(int number, int denom, int capacity, int curr, boolean balanceAlert) {
+		super(number, denom, capacity, curr, AtmCassetteType.CASH_OUT_CASS, balanceAlert);
+	}
+
 	public void setAmountInit(int amountInit) {
-	    this.amountInit = amountInit;
-    }
+		this.amountInit = amountInit;
+	}
+
 	public int getAmountInit() {
-	    return amountInit;
-    }
+		return amountInit;
+	}
+
 	public void setCodeA3(String codeA3) {
-	    this.codeA3 = codeA3;
-    }
+		this.codeA3 = codeA3;
+	}
+
 	public String getCodeA3() {
-	    return codeA3;
-    }
+		return codeA3;
+	}
+
 	public void setPbClass(String pbClass) {
-	    this.pbClass = pbClass;
-    }
+		this.pbClass = pbClass;
+	}
+
 	public String getPbClass() {
-	    return pbClass;
-    }
+		return pbClass;
+	}
+
 	public int getAmountOut() {
 		return amountOut;
 	}
+
 	public void setAmountOut(int amountOut) {
 		this.amountOut = amountOut;
 	}
+
 	public int getAmountIn() {
 		return amountIn;
 	}
@@ -72,10 +84,11 @@ public class AtmRecyclingCassetteItem extends AtmCassetteItem implements Seriali
 		this.amountLeftFE = amountLeftFE;
 	}
 
-	public boolean isBalanceAlert(){
+	public boolean isBalanceAlert() {
 		return super.isBalanceAlert();
 	}
-	public void setBalanceAlert(boolean balanceAlert){
+
+	public void setBalanceAlert(boolean balanceAlert) {
 		super.setBalanceAlert(balanceAlert);
 	}
 }

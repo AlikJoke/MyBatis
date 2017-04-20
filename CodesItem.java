@@ -2,15 +2,15 @@ package ru.bpc.cm.cashmanagement.orm.items;
 
 public class CodesItem {
 
-	private int mainCurrCode;
-	private int secCurrCode;
-	private int sec2CurrCode;
-	private int sec3CurrCode;
+	private Integer mainCurrCode;
+	private Integer secCurrCode;
+	private Integer sec2CurrCode;
+	private Integer sec3CurrCode;
 
 	public CodesItem() {
 	}
 
-	public CodesItem(int mainCurrCode, int secCurrCode, int sec2CurrCode, int sec3CurrCode) {
+	public CodesItem(Integer mainCurrCode, Integer secCurrCode, Integer sec2CurrCode, Integer sec3CurrCode) {
 		super();
 		this.mainCurrCode = mainCurrCode;
 		this.secCurrCode = secCurrCode;
@@ -18,35 +18,35 @@ public class CodesItem {
 		this.sec3CurrCode = sec3CurrCode;
 	}
 
-	public int getMainCurrCode() {
+	public Integer getMainCurrCode() {
 		return mainCurrCode;
 	}
 
-	public void setMainCurrCode(int mainCurrCode) {
+	public void setMainCurrCode(Integer mainCurrCode) {
 		this.mainCurrCode = mainCurrCode;
 	}
 
-	public int getSecCurrCode() {
+	public Integer getSecCurrCode() {
 		return secCurrCode;
 	}
 
-	public void setSecCurrCode(int secCurrCode) {
+	public void setSecCurrCode(Integer secCurrCode) {
 		this.secCurrCode = secCurrCode;
 	}
 
-	public int getSec2CurrCode() {
+	public Integer getSec2CurrCode() {
 		return sec2CurrCode;
 	}
 
-	public void setSec2CurrCode(int sec2CurrCode) {
+	public void setSec2CurrCode(Integer sec2CurrCode) {
 		this.sec2CurrCode = sec2CurrCode;
 	}
 
-	public int getSec3CurrCode() {
+	public Integer getSec3CurrCode() {
 		return sec3CurrCode;
 	}
 
-	public void setSec3CurrCode(int sec3CurrCode) {
+	public void setSec3CurrCode(Integer sec3CurrCode) {
 		this.sec3CurrCode = sec3CurrCode;
 	}
 }

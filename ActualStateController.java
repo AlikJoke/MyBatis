@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ejbs.cm.svcm.ISessionHolder;
+import ru.bpc.cm.cashmanagement.CmCommonController;
 import ru.bpc.cm.cashmanagement.CurrencyConverter;
 import ru.bpc.cm.cashmanagement.orm.handlers.AtmCassetteInResultHandler;
 import ru.bpc.cm.cashmanagement.orm.handlers.AtmCassetteOutResultHandler;
@@ -24,7 +25,9 @@ import ru.bpc.cm.config.utils.ORMUtils;
 import ru.bpc.cm.filters.MonitoringFilter;
 import ru.bpc.cm.forecasting.anyatm.items.AnyAtmForecast;
 import ru.bpc.cm.forecasting.anyatm.items.Currency;
+import ru.bpc.cm.items.enums.AtmAttribute;
 import ru.bpc.cm.items.enums.AtmCassetteType;
+import ru.bpc.cm.items.forecast.ForecastException;
 import ru.bpc.cm.items.forecast.ForecastStatDay;
 import ru.bpc.cm.items.monitoring.AtmActualStateItem;
 import ru.bpc.cm.items.monitoring.AtmCashOutCassetteItem;
@@ -53,15 +56,29 @@ public class ActualStateController {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
 			AtmActualStateMapper mapper = session.getMapper(getMapperClass());
+			System.out.println("Trying to get list of atms by mapper of MyBatis...");
 			List<AtmActualStateItem> atmActualStateList = Optional.ofNullable(mapper.getAtmActualStateList(addFilter))
 					.orElse(new ArrayList<AtmActualStateItem>());
-
+			System.out.println("Size of atms list: " + atmActualStateList.size());
 			for (AtmActualStateItem item : atmActualStateList) {
+				System.out.println("atmId: " + item.getAtmID());
 				List<AtmCashOutCassetteItem> atmCashOutCassettes = Optional
 						.ofNullable(mapper.getAtmCashOutCassettesList(item.getAtmID(),
 								AtmCassetteType.CASH_OUT_CASS.getId(), item.getEncID(),
 								new Timestamp(item.getStatDate().getTime())))
 						.orElse(new ArrayList<AtmCashOutCassetteItem>());
+				String atttrValue = null;
+				try {
+					atttrValue = CmCommonController.getAtmAttribute(sessionHolder, item.getAtmID(),
+							AtmAttribute.CASH_OUT_CASS_EMERGENCY_BILLS_VOLUME);
+				} catch (ForecastException e) {
+					logger.error(e.getLocalizedMessage());
+				}
+				for (AtmCashOutCassetteItem cass : atmCashOutCassettes)
+					if (atttrValue != null && atttrValue != "0")
+						if (Integer.valueOf(atttrValue) > cass.getAmountLeft())
+							cass.setEmergencyBillsWarning(true);
+
 				item.getCashOutCassettes().addAll(atmCashOutCassettes);
 				List<AtmRecyclingCassetteItem> atmRecyclingCassette = Optional
 						.ofNullable(mapper.getAtmRecyclingCassettesList(item.getAtmID(), item.getCashInEncId(),
@@ -278,7 +295,14 @@ public class ActualStateController {
 				if (forecast.getOutOfCashInDate() != null)
 					outOfCashInDate = new Timestamp(
 							CmUtils.truncateDateToHours(forecast.getOutOfCashInDate()).getTime());
-
+				System.out
+						.println("insertAtmActualStateItem: ATM_ID = " + forecast.getAtmId() + "; CASH_OUT_STAT_DATE = "
+								+ new Timestamp(cashOutStat.getKey().getTime()) + "; " + "CASH_OUT_ENCASHMENT_ID = "
+								+ cashOutStat.getValue() + "; CASH_IN_STAT_DATE = " + cashInStatDate
+								+ "; CASH_IN_ENCASHMENT_ID = " + cashInStatValue + "; " + "LAST_WITHDRAWAL_HOURS = "
+								+ getCashOutHoursFromLastWithdrawal(sessionHolder, forecast.getAtmId())
+								+ "; LAST_ADDITION_HOURS = "
+								+ getCashInHoursFromLastAddition(sessionHolder, forecast.getAtmId()));
 				mapper.insertAtmActualStateItem(forecast.getAtmId(), new Timestamp(cashOutStat.getKey().getTime()),
 						cashOutStat.getValue(), cashInStatDate, cashInStatValue, new Timestamp(new Date().getTime()),
 						outOfCashOutDate, outOfCashOutCurr, forecast.getOutOfCashOutResp(), outOfCashInDate,
@@ -459,8 +483,8 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashOutCassettes(ecnashmentId,
-					atmId, new AtmCassetteOutResultHandler());
+			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashOutCassettes(
+					AtmCassetteType.CASH_OUT_CASS.getId(), ecnashmentId, atmId, new AtmCassetteOutResultHandler());
 			for (AtmCassetteItem cassette : cassettes)
 				cassette.setType(AtmCassetteType.CASH_OUT_CASS);
 			cassList.addAll(cassettes);
@@ -473,8 +497,9 @@ public class ActualStateController {
 			List<AtmCassetteItem> cassList) {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass())
-					.getCashInRecyclingCassettes(cashInEcnashmentId, atmId, new AtmCassetteInResultHandler());
+			List<AtmCassetteItem> cassettes = session.getMapper(getMapperClass()).getCashInRecyclingCassettes(
+					AtmCassetteType.CASH_IN_R_CASS.getId(), cashInEcnashmentId, atmId,
+					new AtmCassetteInResultHandler());
 			for (AtmCassetteItem cassette : cassettes)
 				cassette.setType(AtmCassetteType.CASH_IN_R_CASS);
 			cassList.addAll(cassettes);
@@ -501,7 +526,6 @@ public class ActualStateController {
 			}
 			mapper.deleteAtmCassettes(atmId);
 		} finally {
-			// session.commit();
 			session.close();
 		}
 	}

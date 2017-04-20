@@ -1,17 +1,14 @@
 package ru.bpc.cm.forecasting.orm;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectProvider;
-import org.apache.ibatis.executor.BatchResult;
 
 import ru.bpc.cm.cashmanagement.orm.builders.ForecastCompareBuilder;
 import ru.bpc.cm.config.IMapper;
@@ -74,7 +71,4 @@ public interface ForecastCompareMapper extends IMapper {
 			+ "AND stat_date > #{startDate} AND stat_date < #{endDate} ")
 	Integer getStatsDatesCount(@Param("atmId") Integer atmId, @Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate);
-
-	@Flush
-	List<BatchResult> flush();
 }

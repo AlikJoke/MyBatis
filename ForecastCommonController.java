@@ -89,7 +89,7 @@ public class ForecastCommonController {
 					item.setMaxCassCount(cassCountForSec3Curr);
 					atmCurrencies.add(item);
 				}
-				atmCurrencies.get(0).setMaxCassCount(AtmCassettesController.getAtmCassCount(session.getConnection(),
+				atmCurrencies.get(0).setMaxCassCount(AtmCassettesController.getAtmCassCount(sessionHolder,
 						atmId, AtmCassetteType.CASH_OUT_CASS));
 			} else {
 				throw new ForecastException(ForecastException.NO_MAIN_CURR);
