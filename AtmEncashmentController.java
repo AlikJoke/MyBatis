@@ -99,36 +99,34 @@ public class AtmEncashmentController {
 
 			QueryConstructor querConstr = new QueryConstructor();
 			querConstr.setQueryBody(sql.toString(), true);
-
-			querConstr.addElementIfNotNull("atm_id", "AND", "ATM_ID", DbTextUtil.getOperationType(addFilter.getAtmID()),
+			
+			querConstr.addElementIfNotNull("atm_id", "AND", "ai.ATM_ID", DbTextUtil.getOperationType(addFilter.getAtmID()),
 					addFilter.getAtmID());
-
-			if (addFilter.getEncashmenFilterMode() != EncashmentFilterMode.NONE) {
+			querConstr.addElementIfNotNull("external_id", "AND", "ai.EXTERNAL_ATM_ID", DbTextUtil.getOperationType(addFilter.getExtAtmID()),
+					addFilter.getExtAtmID());
+			
+			if(addFilter.getEncashmenFilterMode() != EncashmentFilterMode.NONE){
 				querConstr.addElementIfNotNull("date_forthcoming_enc", "AND", "DATE_FORTHCOMING_ENCASHMENT", ">=",
 						addFilter.getForthcomingEncDateFrom());
 				querConstr.addElementIfNotNull("date_forthcoming_enc", "AND", "DATE_FORTHCOMING_ENCASHMENT", "<=",
 						addFilter.getForthcomingEncDateTo());
 			}
-
-			if (TextUtil.isNotEmpty(addFilter.getNameAndAddress())) {
-				querConstr.addElement("atm_name", "AND ( ", "ATM_NAME",
-						DbTextUtil.getOperationType(addFilter.getNameAndAddress()), addFilter.getNameAndAddress(),
-						false);
-				querConstr.addElement("address", "OR", "address",
-						DbTextUtil.getOperationType(addFilter.getNameAndAddress()), addFilter.getNameAndAddress(),
-						false);
+			
+			if(TextUtil.isNotEmpty(addFilter.getNameAndAddress())){
+				querConstr.addElement("atm_name", "AND ( ", "ai.NAME", DbTextUtil.getOperationType(addFilter.getNameAndAddress()),
+						addFilter.getNameAndAddress(), false);
+				querConstr.addElement("address", "OR", "ai.STATE || ', ' || ai.CITY || ', ' || ai.STREET",DbTextUtil.getOperationType(addFilter.getNameAndAddress()),
+						addFilter.getNameAndAddress(), false);
 				querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 			}
-
-			if (addFilter.getTypeByOperations() > -1) {
-				querConstr.addElementInt("atm_type", "AND", "COALESCE(ai.TYPE,0)", "=",
-						addFilter.getTypeByOperations());
+			
+			if(addFilter.getTypeByOperations() > -1){
+				querConstr.addElementInt("atm_type", "AND", "COALESCE(ai.TYPE,0)", "=", addFilter.getTypeByOperations());
 			}
-
+			
 			querConstr.setQueryTail(" ORDER BY aep.DATE_FORTHCOMING_ENCASHMENT, aep.EMERGENCY_ENCASHMENT");
 			pstmt = connection.prepareStatement(querConstr.getQuery());
-			// pstmt.setTimestamp(1,new
-			// Timestamp(filter.getForthcomingEncDateFrom().getTime()));
+			//pstmt.setTimestamp(1,new Timestamp(filter.getForthcomingEncDateFrom().getTime()));
 			querConstr.updateQueryParameters(pstmt);
 			rs = pstmt.executeQuery();
 
@@ -138,27 +136,33 @@ public class AtmEncashmentController {
 				item.setEncPlanID(rs.getInt("ENC_PLAN_ID"));
 				item.setAtmID(rs.getInt("ATM_ID"));
 				item.setExtAtmId(rs.getString("EXTERNAL_ATM_ID"));
-				item.setPreviousEncDate(JdbcUtils.getDate(rs.getDate("DATE_PREVIOUS_ENCASHMENT")));
-				item.setIntervalLastToForth(rs.getInt("INTERVAL_ENC_LAST_TO_FORTH"));
-				item.setForthcomingEncDate(rs.getTimestamp("DATE_FORTHCOMING_ENCASHMENT"));
-				item.setIntervalForthToFuture(rs.getInt("INTERVAL_ENC_FORTH_TO_FUTURE"));
-				item.setFutureEncDate(JdbcUtils.getDate(rs.getDate("DATE_FUTURE_ENCASHMENT")));
+				item.setPreviousEncDate(JdbcUtils.getDate(rs
+						.getDate("DATE_PREVIOUS_ENCASHMENT")));
+				item.setIntervalLastToForth(rs
+						.getInt("INTERVAL_ENC_LAST_TO_FORTH"));
+				item.setForthcomingEncDate(rs
+						.getTimestamp("DATE_FORTHCOMING_ENCASHMENT"));
+				item.setIntervalForthToFuture(rs
+						.getInt("INTERVAL_ENC_FORTH_TO_FUTURE"));
+				item.setFutureEncDate(JdbcUtils.getDate(rs
+						.getDate("DATE_FUTURE_ENCASHMENT")));
 				item.setApprooved(rs.getBoolean("IS_APPROVED"));
 				item.setEncSummCurrCode(rs.getInt("ENC_LOSTS_CURR_CODE"));
 				item.setForecastResp(rs.getInt("FORECAST_RESP_CODE"));
-				item.setEmergencyEncashment(rs.getBoolean("EMERGENCY_ENCASHMENT"));
+				item.setEmergencyEncashment(rs
+						.getBoolean("EMERGENCY_ENCASHMENT"));
 				item.setEncSummCurr(rs.getString("ENC_SUMM_CURR"));
-				item.setAddress(rs.getString("ADDRESS")); // CmUtils.getAtmFullAdrress(rs.getString("STATE"),
-															// rs.getString("CITY"),rs.getString("STREET"))
+				item.setAddress(rs.getString("ADDRESS")); //CmUtils.getAtmFullAdrress(rs.getString("STATE"), rs.getString("CITY"),rs.getString("STREET"))
 				item.setEncLosts(rs.getLong("ENC_LOSTS"));
 				item.setEncPrice(rs.getLong("ENC_PRICE"));
 				item.setCashAddEncashment(rs.getBoolean("CASH_ADD_ENCASHMENT"));
-				item.setEditable(!item.isApprooved() && item.getForthcomingEncDate().after(currentDate));
+				item.setEditable(!item.isApprooved()
+						&& item.getForthcomingEncDate().after(currentDate));
 				item.setAtmName(rs.getString("ATM_NAME"));
 				item.setEncType(CmUtils.getEnumValueById(EncashmentType.class, rs.getInt("ENCASHMENT_TYPE")));
 				item.setApproveLogin(rs.getString("APPROVE_NAME"));
 				item.setAtmType(CmUtils.getEnumValueById(AtmTypeByOperations.class, rs.getInt("ATM_TYPE")));
-
+				
 				atmEncashmentList.add(item);
 			}
 
