@@ -10,11 +10,15 @@ import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultType;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.SelectProvider;
 
 import ru.bpc.cm.items.reports.RepCurrStatItem;
 import ru.bpc.cm.items.reports.RepCurrStatRecItem;
+import ru.bpc.cm.items.reports.RepDenomStatItem;
+import ru.bpc.cm.items.reports.RepDenomStatRecItem;
 import ru.bpc.cm.orm.common.IMapper;
 import ru.bpc.cm.orm.handlers.SqlDateToJavaDateHandler;
+import ru.bpc.cm.reports.orm.builders.ReportDenomCurrBuilder;
 
 /**
  * Интерфейс-маппер для класса ReportsDenomCurrController.
@@ -27,18 +31,18 @@ import ru.bpc.cm.orm.handlers.SqlDateToJavaDateHandler;
 public interface ReportsDenomCurrMapper extends IMapper {
 
 	@Results({ 
-		@Result(column = "ATM_ID", property = "atmID", javaType = Integer.class),
-		@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Date.class, typeHandler = SqlDateToJavaDateHandler.class),
-		@Result(column = "CURR_CODE", property = "currCode", javaType = Integer.class),
-		@Result(column = "CODE_A3", property = "currCodeA3", javaType = String.class),
-		@Result(column = "LOADED", property = "loaded", javaType = Integer.class),
-		@Result(column = "WITHDRAWAL", property = "withdrawal", javaType = Integer.class),
-		@Result(column = "REMAINING", property = "remaining", javaType = Integer.class),
-		@Result(column = "LEFT_BEFORE_CASH_ADD", property = "leftBeforeCashAdd", javaType = Integer.class),
-		@Result(column = "TRANS_COUNT", property = "transCount", javaType = Integer.class),
-		@Result(column = "CURR_COUNT", property = "currCount", javaType = Integer.class),
-		@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class),
-		@Result(column = "summTrans", property = "AVERAGE_TRANSACTION_SUM", javaType = Integer.class)
+			@Result(column = "ATM_ID", property = "atmID", javaType = Integer.class),
+			@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Date.class, typeHandler = SqlDateToJavaDateHandler.class),
+			@Result(column = "CURR_CODE", property = "currCode", javaType = Integer.class),
+			@Result(column = "CODE_A3", property = "currCodeA3", javaType = String.class),
+			@Result(column = "LOADED", property = "loaded", javaType = Integer.class),
+			@Result(column = "WITHDRAWAL", property = "withdrawal", javaType = Integer.class),
+			@Result(column = "REMAINING", property = "remaining", javaType = Integer.class),
+			@Result(column = "LEFT_BEFORE_CASH_ADD", property = "leftBeforeCashAdd", javaType = Integer.class),
+			@Result(column = "TRANS_COUNT", property = "transCount", javaType = Integer.class),
+			@Result(column = "CURR_COUNT", property = "currCount", javaType = Integer.class),
+			@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class),
+			@Result(column = "summTrans", property = "AVERAGE_TRANSACTION_SUM", javaType = Integer.class)
 	})
 	@Select("SELECT v.ATM_ID, v.CURR_CODE, ci.code_a3 as CODE_A3, v.DATE_FROM as ENC_DATE_FROM, "
 			+ "v.DATE_TO as ENC_DATE_TO, v.LOADED as LOADED, "
@@ -58,21 +62,21 @@ public interface ReportsDenomCurrMapper extends IMapper {
 	List<RepCurrStatItem> getReportCoCurrStat(@Param("dateTo") Timestamp dateTo, @Param("dateFrom") Timestamp dateFrom);
 	
 	@Results({ 
-		@Result(column = "ATM_ID", property = "atmID", javaType = Integer.class),
-		@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Date.class, typeHandler = SqlDateToJavaDateHandler.class),
-		@Result(column = "CURR_CODE", property = "currCode", javaType = Integer.class),
-		@Result(column = "CODE_A3", property = "currCodeA3", javaType = String.class),
-		@Result(column = "LOADED", property = "loaded", javaType = Integer.class),
-		@Result(column = "CURR_SUMM_IN", property = "currSummIn", javaType = Integer.class),
-		@Result(column = "CURR_SUMM_OUT", property = "currSummOut", javaType = Integer.class),
-		@Result(column = "REMAINING", property = "remaining", javaType = Integer.class),
-		@Result(column = "LEFT_BEFORE_CASH_ADD", property = "leftBeforeCashAdd", javaType = Integer.class),
-		@Result(column = "TRANS_COUNT_IN", property = "transCountIn", javaType = Integer.class),
-		@Result(column = "TRANS_COUNT_OUT", property = "transCountOut", javaType = Integer.class),
-		@Result(column = "CURR_COUNT", property = "currCount", javaType = Integer.class),
-		@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class),
-		@Result(column = "AVERAGE_TRANSACTION_SUM_IN", property = "summTransIn", javaType = Integer.class),
-		@Result(column = "AVERAGE_TRANSACTION_SUM_OUT", property = "summTransOut", javaType = Integer.class)
+			@Result(column = "ATM_ID", property = "atmID", javaType = Integer.class),
+			@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Date.class, typeHandler = SqlDateToJavaDateHandler.class),
+			@Result(column = "CURR_CODE", property = "currCode", javaType = Integer.class),
+			@Result(column = "CODE_A3", property = "currCodeA3", javaType = String.class),
+			@Result(column = "LOADED", property = "loaded", javaType = Integer.class),
+			@Result(column = "CURR_SUMM_IN", property = "currSummIn", javaType = Integer.class),
+			@Result(column = "CURR_SUMM_OUT", property = "currSummOut", javaType = Integer.class),
+			@Result(column = "REMAINING", property = "remaining", javaType = Integer.class),
+			@Result(column = "LEFT_BEFORE_CASH_ADD", property = "leftBeforeCashAdd", javaType = Integer.class),
+			@Result(column = "TRANS_COUNT_IN", property = "transCountIn", javaType = Integer.class),
+			@Result(column = "TRANS_COUNT_OUT", property = "transCountOut", javaType = Integer.class),
+			@Result(column = "CURR_COUNT", property = "currCount", javaType = Integer.class),
+			@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class),
+			@Result(column = "AVERAGE_TRANSACTION_SUM_IN", property = "summTransIn", javaType = Integer.class),
+			@Result(column = "AVERAGE_TRANSACTION_SUM_OUT", property = "summTransOut", javaType = Integer.class)
 	})
 	@Select("SELECT v.ATM_ID, v.CURR_CODE, ci.code_a3 as CODE_A3, v.DATE_FROM as ENC_DATE_FROM, "
 			+ "v.DATE_TO as ENC_DATE_TO, v.LOADED, v.UNLOADED as REMAINING, "
@@ -92,5 +96,84 @@ public interface ReportsDenomCurrMapper extends IMapper {
 	@Options(useCache = true, fetchSize = 1000)
 	List<RepCurrStatRecItem> getReportCrCurrStat(@Param("dateTo") Timestamp dateTo,
 			@Param("dateFrom") Timestamp dateFrom);
-
+	
+	@Results({ 
+			@Result(column = "ATM_ID", property = "atmID", javaType = Integer.class),
+			@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "ENC_DATE_TO", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "DENOM_CURR_A3", property = "denomCurrCodeA3", javaType = String.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_IN", property = "denomCountIn", javaType = Integer.class),
+			@Result(column = "DENOM_OUT", property = "denomCountOut", javaType = Integer.class),
+			@Result(column = "DENOM_TRANS_COUNT", property = "transCount", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT", property = "transCoeff", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class)
+	})
+	@SelectProvider(type = ReportDenomCurrBuilder.class, method = "getReportCoDenomStatBuilder")
+	@ResultType(RepDenomStatItem.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<RepDenomStatItem> getReportCoDenomStat(@Param("dateTo") Timestamp dateTo,
+			@Param("dateFrom") Timestamp dateFrom);
+	
+	@Results({ 
+			@Result(column = "ATM_ID", property = "atmID", javaType = Integer.class),
+			@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "ENC_DATE_TO", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "DENOM_CURR_A3", property = "denomCurrCodeA3", javaType = String.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT_IN", property = "denomCountIn", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT_OUT", property = "denomCountOut", javaType = Integer.class),
+			@Result(column = "DENOM_TRANS_COUNT_IN", property = "transCountIn", javaType = Integer.class),
+			@Result(column = "DENOM_TRANS_COUNT_OUT", property = "transCountOut", javaType = Integer.class),
+			@Result(column = "LOADED", property = "denomLoaded", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT_IN", property = "transCoeffIn", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT_OUT", property = "transCoeffOut", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class)
+	})
+	@SelectProvider(type = ReportDenomCurrBuilder.class, method = "getReportCoDenomStatForAtmBuilder")
+	@ResultType(RepDenomStatItem.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<RepDenomStatItem> getReportCoDenomStatForAtm(@Param("atmId") Integer atmId, @Param("dateTo") Timestamp dateTo,
+			@Param("dateFrom") Timestamp dateFrom);
+	
+	@Results({ 
+			@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "ENC_DATE_TO", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "DENOM_CURR_A3", property = "denomCurrCodeA3", javaType = String.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_IN", property = "denomCountIn", javaType = Integer.class),
+			@Result(column = "DENOM_OUT", property = "denomCountOut", javaType = Integer.class),
+			@Result(column = "DENOM_TRANS_COUNT", property = "transCount", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT", property = "transCoeff", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class)
+	})
+	@SelectProvider(type = ReportDenomCurrBuilder.class, method = "getReportCrDenomStatBuilder")
+	@ResultType(RepDenomStatRecItem.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<RepDenomStatRecItem> getReportCrDenomStat(@Param("dateTo") Timestamp dateTo,
+			@Param("dateFrom") Timestamp dateFrom);
+	
+	@Results({ 
+			@Result(column = "ENC_DATE_FROM", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "ENC_DATE_TO", property = "encDateFrom", javaType = Timestamp.class),
+			@Result(column = "DENOM_CURR_A3", property = "denomCurrCodeA3", javaType = String.class),
+			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT_IN", property = "denomCountIn", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT_OUT", property = "denomCountOut", javaType = Integer.class),
+			@Result(column = "DENOM_TRANS_COUNT_IN", property = "transCountIn", javaType = Integer.class),
+			@Result(column = "DENOM_TRANS_COUNT_OUT", property = "transCountOut", javaType = Integer.class),
+			@Result(column = "LOADED", property = "denomLoaded", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT_IN", property = "transCoeffIn", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT_OUT", property = "transCoeffOut", javaType = Integer.class),
+			@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),
+			@Result(column = "LINE_NUBMER", property = "lineNumber", javaType = Integer.class)
+	})
+	@SelectProvider(type = ReportDenomCurrBuilder.class, method = "getReportCrDenomStatForAtmBuilder")
+	@ResultType(RepDenomStatRecItem.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<RepDenomStatRecItem> getReportCrDenomStatForAtm(@Param("atmId") Integer atmId,
+			@Param("dateTo") Timestamp dateTo, @Param("dateFrom") Timestamp dateFrom);
 }
