@@ -1,4 +1,4 @@
-package ru.bpc.cm.config.utils;
+package ru.bpc.cm.orm.common;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,7 +13,7 @@ import ru.bpc.cm.utils.db.JdbcUtils;
  * 
  * @author Alimurad A. Ramazanov
  * @since 09.03.2017
- * @version 1.1.4
+ * @version 1.1.5
  *
  */
 public class ORMUtils {
@@ -119,6 +119,19 @@ public class ORMUtils {
 					+ " ON COMMIT DELETE ROWS";
 			Statement stmt = session.getConnection().createStatement();
 			stmt.executeUpdate(tempSql);
+		}
+	}
+
+	public static String getTruncateTableUnrecoverable(SqlSession session, String tableName) throws SQLException {
+		String DbName = getDbName(session);
+		if (DbName == "Oracle") {
+			return " TRUNCATE TABLE " + tableName + " DROP STORAGE ";
+		} else if (DbName == "DB2") {
+			return " DELETE FROM " + tableName;
+		} else if (DbName == "PostgreSQL") {
+			return "TRUNCATE " + tableName;
+		} else {
+			throw new SQLException();
 		}
 	}
 }
