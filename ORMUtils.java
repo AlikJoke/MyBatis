@@ -2,9 +2,12 @@ package ru.bpc.cm.orm.common;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSession;
 
+import ru.bpc.cm.utils.CollectionUtils;
 import ru.bpc.cm.utils.db.JdbcUtils;
 
 /**
@@ -17,6 +20,8 @@ import ru.bpc.cm.utils.db.JdbcUtils;
  *
  */
 public class ORMUtils {
+
+	public static final int MAX_PARAMS_FOR_IN_CONDITION = 999;
 
 	public static String getNextSequence(SqlSession session, String seqName) throws SQLException {
 		String DbName = getDbName(session);
@@ -133,5 +138,33 @@ public class ORMUtils {
 		} else {
 			throw new SQLException();
 		}
+	}
+
+	public static String getDeleteFromTableFieldInConditional(SqlSession session, String tableName, String columnName,
+			List<Integer> inClauseList) throws SQLException {
+		String query = "";
+		if (inClauseList != null && !inClauseList.isEmpty()) {
+			String DbName = getDbName(session);
+			boolean splitFlag = false;
+			if (DbName == "Oracle") {
+				query = " DELETE FROM " + tableName + " where ";
+			} else if (DbName == "DB2") {
+				query = " DELETE FROM " + tableName + " where ";
+			} else if (DbName == "PostgreSQL") {
+				query = "TRUNCATE " + tableName + " where ";
+			} else {
+				throw new SQLException();
+			}
+			for (List<Integer> inList : CollectionUtils.splitListBySizeView(inClauseList,
+					MAX_PARAMS_FOR_IN_CONDITION)) {
+				if (splitFlag) {
+					query += " or ";
+				}
+				query += columnName + " in (" + StringUtils.join(inList, ",") + ") ";
+				splitFlag = true;
+			}
+		}
+
+		return query;
 	}
 }

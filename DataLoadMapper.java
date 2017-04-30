@@ -1,18 +1,23 @@
 package ru.bpc.cm.integration.orm;
 
 import java.sql.Timestamp;
+import java.util.List;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.DeleteProvider;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.ResultType;
+import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.Update;
 
 import ru.bpc.cm.integration.orm.builders.DataLoadBuilder;
 import ru.bpc.cm.orm.common.IMapper;
+import ru.bpc.cm.utils.ObjectPair;
 
 /**
  * Интерфейс-маппер для класса DataLoadController.
@@ -116,4 +121,79 @@ public interface DataLoadMapper extends IMapper {
 	@DeleteProvider(type = DataLoadBuilder.class, method = "truncateTimestampBuilder")
 	void truncateTrans(@Param("tableName") String tableName, @Param("dateField") String dateField,
 			@Param("dateFrom") Timestamp dateFrom, @Param("dateTo") Timestamp dateTo);
+
+	@DeleteProvider(type = DataLoadBuilder.class, method = "deleteQueryBuilder")
+	void deleteOldStats_delete(@Param("tableName") String tableName, @Param("atmId") Integer atmId,
+			@Param("encId") Integer encId);
+
+	@Delete("DELETE FROM t_cm_enc_cashout_stat_details WHERE "
+			+ "encashment_id in (select encashment_id from t_cm_enc_cashout_stat where atm_id=#{atmId}) AND "
+			+ "encashment_id < #{encId}")
+	void deleteOldStats_deleteDetails(@Param("atmId") Integer atmId, @Param("encId") Integer encId);
+
+	@Results({
+			@Result(column = "atm_id", property = "key", javaType = Integer.class),
+			@Result(column = "encashment_id", property = "value", javaType = Integer.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT MAX(encashment_id) as encashment_id,atm_id  FROM t_cm_enc_cashout_stat "
+			+ " WHERE enc_date < #{dt}  GROUP BY atm_id")
+	List<ObjectPair<Integer, Integer>> deleteOldStats_selectMaxEncId(@Param("dt") Timestamp dt);
+
+	@Results({
+			@Result(column = "atm_id", property = "key", javaType = Integer.class),
+			@Result(column = "encashment_id", property = "value", javaType = Integer.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT MAX(cash_in_encashment_id) as encashment_id,atm_id  FROM t_cm_enc_cashin_stat "
+			+ " WHERE cash_in_enc_date < #{dt}  GROUP BY atm_id")
+	List<ObjectPair<Integer, Integer>> deleteOldStats_selectMaxCashEncId(@Param("dt") Timestamp dt);
+
+	@Insert("INSERT INTO t_cm_intgr_params  (LAST_UTRNNO,LAST_DOWNTIME_DATETIME,LAST_TRANS_DATETIME)  VALUES "
+			+ " (#{lastUtrnno},#{lastDowntimeDatetime},#{lastTransDatetime})")
+	void saveParams_insert(@Param("lastUtrnno") Long lastUtrnno,
+			@Param("lastDowntimeDatetime") Timestamp lastDowntimeDatetime,
+			@Param("lastTransDatetime") Timestamp lastTransDatetime);
+
+	@Update("UPDATE t_cm_intgr_params SET LAST_UTRNNO = #{lastUtrnno}, "
+			+ "LAST_DOWNTIME_DATETIME = #{lastDowntimeDatetime}, LAST_TRANS_DATETIME = #{lastTransDatetime}")
+	void saveParams_update(@Param("lastUtrnno") Long lastUtrnno,
+			@Param("lastDowntimeDatetime") Timestamp lastDowntimeDatetime,
+			@Param("lastTransDatetime") Timestamp lastTransDatetime);
+
+	@Results({
+			@Result(column = "lastUtrnno", property = "key", javaType = Long.class),
+			@Result(column = "lastTransDatetime", property = "value", javaType = Timestamp.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT COALESCE(MAX(utrnno),0) as lastUtrnno ,COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as lastTransDatetime "
+			+ " FROM t_cm_intgr_trans")
+	List<ObjectPair<Long, Timestamp>> saveParams_selectLastTransInfo();
+	
+	@Results({
+			@Result(column = "lastUtrnno", property = "key", javaType = Long.class),
+			@Result(column = "lastTransDatetime", property = "value", javaType = Timestamp.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT COALESCE(MAX(utrnno),0) as lastUtrnno ,COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as lastTransDatetime "
+			+ " FROM t_cm_intgr_trans")
+	List<ObjectPair<Long, Timestamp>> saveParams_selectParams();
+	
+	@Results({
+			@Result(column = "lastUtrnno", property = "key", javaType = Long.class),
+			@Result(column = "lastTransDatetime", property = "value", javaType = Timestamp.class)
+	})
+	@ResultType(ObjectPair.class)
+	@SelectProvider(type = DataLoadBuilder.class, method = "saveParamsForTaskBuilder_lastTransInfo")
+	List<ObjectPair<Long, Timestamp>> saveParamsForTask_lastTransInfo();
+	
+	@Results({
+			@Result(column = "lastUtrnno", property = "key", javaType = Long.class),
+			@Result(column = "lastTransDatetime", property = "value", javaType = Timestamp.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT COALESCE(MAX(oper_id),0) as lastUtrnno ,COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as lastTransDatetime "
+			+ " FROM t_cm_intgr_trans_md")
+	List<ObjectPair<Long, Timestamp>> saveParamsMultiDisp_lastTransInfo();
+
 }
