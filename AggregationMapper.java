@@ -3,6 +3,7 @@ package ru.bpc.cm.integration.orm;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.DeleteProvider;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Options;
@@ -27,7 +28,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 06.05.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface AggregationMapper extends IMapper {
@@ -53,14 +54,14 @@ public interface AggregationMapper extends IMapper {
 	@ResultType(Integer.class)
 	@Select("SELECT COALESCE(MAX(ENCASHMENT_ID),0) as result  FROM T_CM_ENC_CASHOUT_STAT  WHERE ATM_ID = #{atmId}")
 	@Options(useCache = true, fetchSize = 1000)
-	List<Integer> aggregateCashOut_getLastEncId(@Param("atmId") String atmId);
+	Integer aggregateCashOut_getLastEncId(@Param("atmId") String atmId);
 	
 	@Result(column = "ENC_DATE", javaType = Timestamp.class)
 	@ResultType(Timestamp.class)
 	@Select("SELECT COALESCE(MIN(DISTINCT ENC_DATE),CURRENT_TIMESTAMP) as ENC_DATE  FROM T_CM_ENC_CASHOUT_STAT "
 			+ " WHERE ATM_ID = #{atmId}  AND ENC_DATE > #{encDate}")
 	@Options(useCache = true, fetchSize = 1000)
-	List<Timestamp> aggregateCashOut_getNextIncass(@Param("atmId") String atmId, @Param("encDate") Timestamp encDate);
+	Timestamp aggregateCashOut_getNextIncass(@Param("atmId") String atmId, @Param("encDate") Timestamp encDate);
 	
 	@DeleteProvider(type = AggregationBuilder.class, method = "deleteCashOutQueryBuilder")
 	void simpleDeleteCashOutQuery(@Param("tableName") String tableName, @Param("atmId") String atmId,
@@ -83,14 +84,14 @@ public interface AggregationMapper extends IMapper {
 	@Select("SELECT COALESCE(MAX(CASH_IN_ENCASHMENT_ID),0) as result  FROM T_CM_ENC_CASHIN_STAT "
 			+ " WHERE ATM_ID = #{atmId}")
 	@Options(useCache = true, fetchSize = 1000)
-	List<Integer> aggregateCashIn_getLastEncId(@Param("atmId") String atmId);
+	Integer aggregateCashIn_getLastEncId(@Param("atmId") String atmId);
 	
 	@Result(column = "ENC_DATE", javaType = Timestamp.class)
 	@ResultType(Timestamp.class)
 	@Select("SELECT COALESCE(MIN(DISTINCT CASH_IN_ENC_DATE),CURRENT_TIMESTAMP) as ENC_DATE "
 			+ " FROM T_CM_ENC_CASHIN_STAT  WHERE ATM_ID = #{atmId}  AND CASH_IN_ENC_DATE > #{encDate}")
 	@Options(useCache = true, fetchSize = 1000)
-	List<Timestamp> aggregateCashIn_getNextIncass(@Param("atmId") String atmId, @Param("encDate") Timestamp encDate);
+	Timestamp aggregateCashIn_getNextIncass(@Param("atmId") String atmId, @Param("encDate") Timestamp encDate);
 	
 	@DeleteProvider(type = AggregationBuilder.class, method = "deleteCashInQueryBuilder")
 	void simpleDeleteCashInQuery(@Param("tableName") String tableName, @Param("atmId") String atmId,
@@ -312,7 +313,7 @@ public interface AggregationMapper extends IMapper {
 			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
 			+ " ," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS8 > 0 "
 			+ " and datetime between #{pEncDate} and #{pNextEncDate} and TYPE_CASS8 = " + AggregationController.CASS_TYPE_CASH_OUT
-			+ " )GROUP BY truncToHour(d),denom, CURR,CASS_NUM  ORDER BY trans_date,CASS_NUM) cs "
+			+ " ) GROUP BY truncToHour(d),denom, CURR,CASS_NUM  ORDER BY trans_date,CASS_NUM) cs "
 			+ " left outer join t_cm_intgr_downtime_cashout ds on (cs.PID = ds.PID and cs.trans_date = ds.stat_date)")
 	@Options(useCache = true, fetchSize = 1000)
 	List<MultiObject<Timestamp, Integer, Integer, Integer, Integer, Integer, Integer, ?, ?, ?>> insertCassStat_check(
@@ -379,4 +380,497 @@ public interface AggregationMapper extends IMapper {
 			@Param("transCount") Integer transCount, @Param("curr") Integer curr,
 			@Param("cassNumber") Integer cassNumber, @Param("coeff") Integer coeff,
 			@Param("cassRemaining") Integer cassRemaining);
+	
+	@Results({
+			@Result(column = "trans_date", property = "first", javaType = Timestamp.class),
+			@Result(column = "curr", property = "second", javaType = Integer.class),
+			@Result(column = "summ", property = "third", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT", property = "fourth", javaType = Integer.class)
+	})
+	@ResultType(MultiObject.class)
+	@Select("SELECT sum(bills*denom) as summ,truncToHour(d) as trans_date, CURR, count(distinct utrnno) as curr_trans_count "
+			+ " FROM( "
+			+ " select utrnno,BILL_CASS1 as BILLS,DATETIME as d,denom_cass1 as denom, currency_cass1 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS1 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS1 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS2 as BILLS,DATETIME as d,denom_cass2 as denom, currency_cass2 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS2 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS2 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS3 as BILLS,DATETIME as d,denom_cass3 as denom, currency_cass3 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS3 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS3 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS4 as BILLS,DATETIME as d,denom_cass4 as denom, currency_cass4 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS4 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS4 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS5 as BILLS,DATETIME as d,denom_cass5 as denom, currency_cass5 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS5 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS5 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS6 as BILLS,DATETIME as d,denom_cass6 as denom, currency_cass6 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS6 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS6 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS7 as BILLS,DATETIME as d,denom_cass7 as denom, currency_cass7 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS7 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS7 = "
+			+ AggregationController.CASS_TYPE_CASH_OUT + " union all "
+			+ " select utrnno,BILL_CASS8 as BILLS,DATETIME as d,denom_cass8 as denom, currency_cass8 as CURR "
+			+ " from t_cm_intgr_trans  where trans_type_ind in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE
+			+ "," + AggregationController.DEBIT_TRANSACTION_TYPE + ")  and atm_id = #{pPid}  and BILL_CASS8 > 0 "
+			+ " ) GROUP BY truncToHour(d), CURR  ORDER BY trans_date")
+	@Options(useCache = true, fetchSize = 1000)
+	List<MultiObject<Timestamp, Integer, Integer, Integer, ?, ?, ?, ?, ?, ?>> insertCurrStat_check(
+			@Param("pPid") String pPid, @Param("pEncDate") Timestamp pEncDate,
+			@Param("pNextEncDate") Timestamp pNextEncDate);
+
+	@Insert("INSERT INTO "
+			+ "T_CM_CASHOUT_CURR_STAT(ATM_ID,STAT_DATE,ENCASHMENT_ID,CURR_CODE,CURR_SUMM,CURR_TRANS_COUNT) "
+			+ "VALUES(#{atmId}, #{statDate}, #{encId}, #{currCode}, #{currSumm}, #{transCount})")
+	void insertCurrStat_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("currSumm") Integer currSumm,
+			@Param("transCount") Integer transCount);
+
+	@Update("UPDATE T_CM_CASHOUT_CURR_STAT  SET CURR_SUMM = CURR_SUMM + #{currSumm}, "
+			+ " CURR_TRANS_COUNT = CURR_TRANS_COUNT + #{transCount} WHERE ATM_ID = #{atmId} AND "
+			+ "STAT_DATE = #{statDate} AND ENCASHMENT_ID = #{encId} AND CURR_CODE = #{currCode}")
+	void insertCurrStat_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("currSumm") Integer currSumm,
+			@Param("transCount") Integer transCount);
+	
+	@Results({
+			@Result(column = "trans_date", property = "first", javaType = Timestamp.class),
+			@Result(column = "curr", property = "second", javaType = Integer.class),
+			@Result(column = "summ", property = "third", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT", property = "fourth", javaType = Integer.class)
+	})
+	@ResultType(MultiObject.class)
+	@Select("SELECT sum(itmd.note_dispensed*face) as summ, truncToHour(itm.datetime) as trans_date, itmd.currency as CURR, "
+			+ " count(distinct itm.oper_id) as curr_trans_count  from t_cm_intgr_trans_md itm "
+			+ " join t_cm_intgr_trans_md_disp itmd on (itm.oper_id = itmd.oper_id)  where oper_type in ("
+			+ AggregationController.EXCHANGE_TRANSACTION_TYPE + ", " + AggregationController.DEBIT_TRANSACTION_TYPE
+			+ ") and itm.terminal_id = #{pPid}  and itmd.note_dispensed > 0 "
+			+ " and itm.datetime between #{pEncDate} and #{pNextEncDate}  GROUP BY truncToHour(itm.datetime), itmd.currency "
+			+ " ORDER BY trans_date")
+	@Options(useCache = true, fetchSize = 1000)
+	List<MultiObject<Timestamp, Integer, Integer, Integer, ?, ?, ?, ?, ?, ?>> insertCurrStatMd_check(
+			@Param("pPid") String pPid, @Param("pEncDate") Timestamp pEncDate,
+			@Param("pNextEncDate") Timestamp pNextEncDate);
+
+	@Result(column = "result", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT COALESCE(MAX(ENCASHMENT_ID),0) as result FROM T_CM_ENC_CASHOUT_STAT WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID < #{encId}")
+	@Options(useCache = true, fetchSize = 1000)
+	Integer insertEncashmentsPartAndOut_getPrevEnc(@Param("atmId") String atmId, @Param("encId") Integer encId);
+	
+	@Result(column = "result", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT COALESCE(MAX(STAT_DATE),#{pEncDate}) as result FROM T_CM_CASHOUT_CASS_STAT WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID < #{encId}")
+	@Options(useCache = true, fetchSize = 1000)
+	Timestamp insertEncashmentsPartAndOut_getPrevEncLastStat(@Param("pEncDate") Timestamp pEncDate,
+			@Param("atmId") String atmId, @Param("encId") Integer encId);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT  CASE  WHEN CASH_ADD_ENCASHMENT > 0 THEN " + AggregationController.CO_ENC_DET_NOT_UNLOADED_CA
+			+ "  ELSE " + AggregationController.CO_ENC_DET_UNLOADED + "  END as result FROM T_CM_ENC_CASHOUT_STAT "
+			+ " WHERE ENCASHMENT_ID = #{encId}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertEncashmentsPartAndOut_getUnloadType(@Param("encId") Integer encId);
+	
+	@Result(column = "CASS_NUMBER", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("select CASS_NUMBER from t_cm_enc_cashout_stat_Details  where encashment_id = #{prevEncId} "
+			+ " and not exists (select CASS_NUMBER from t_cm_enc_cashout_stat_Details "
+			+ " where encashment_id = #{encId})")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertEncashmentsPartAndOut_getDetailsLoop(@Param("prevEncId") Integer prevEncId,
+			@Param("encId") Integer encId);
+	
+	@Result(column = "CASS_NUMBER", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("select CASS_NUMBER from t_cm_enc_cashout_stat_Details where encashment_id = #{prevEncId} ")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertEncashmentsPartAndOut_getPrevEncDetailsLoop(@Param("prevEncId") Integer prevEncId);
+	
+	@Results({
+			@Result(column = "CASS_REMAINING", property = "first", javaType = Integer.class),
+			@Result(column = "CASS_VALUE", property = "second", javaType = Integer.class),
+			@Result(column = "CASS_CURR", property = "third", javaType = Integer.class)
+	})
+	@ResultType(TripleObject.class)
+	@Select("SELECT CASS_REMAINING,CASS_VALUE,CASS_CURR  FROM T_CM_CASHOUT_CASS_STAT  WHERE ATM_ID = #{pPid} "
+			+ " AND ENCASHMENT_ID = #{prevEncId}  AND STAT_DATE = #{prevEncLastStat}  AND CASS_NUMBER = #{cassNumber} ")
+	@Options(useCache = true, fetchSize = 1000)
+	List<TripleObject<Integer, Integer, Integer>> insertEncashmentsPartAndOut_getCassStat(@Param("pPid") String pPid,
+			@Param("prevEncId") Integer prevEncId, @Param("prevEncLastStat") Timestamp prevEncLastStat,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Insert(" INSERT INTO T_CM_ENC_CASHOUT_STAT_details "
+			+ " (ENCASHMENT_ID,CASS_VALUE,CASS_CURR,CASS_COUNT,ACTION_TYPE,CASS_NUMBER)  VALUES "
+			+ " (#{encId}, #{cassValue}, #{cassCurr}, #{cassCount}, #{actionType}, #{cassNumber}) ")
+	void insertEncashmentsPartAndOut_insert(@Param("encId") Integer encId, @Param("cassValue") Integer cassValue,
+			@Param("cassCurr") Integer cassCurr, @Param("cassCount") Integer cassCount,
+			@Param("actionType") Integer actionType, @Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "ENCASHMENT_ID", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("select ENCASHMENT_ID from T_CM_ENC_CASHOUT_STAT_details "
+			+ " where ENCASHMENT_ID=#{pEncId} and CASS_NUMBER=#{cassNumber} and ACTION_TYPE=#{actionType}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertEncashmentsPartAndOut_checkInsert(@Param("pEncId") Integer pEncId,
+			@Param("cassNumber") Integer cassNumber, @Param("actionType") Integer actionType);
+	
+	@Delete("delete from t_cm_enc_cashout_stat_details ecs  where ecs.encashment_id = #{pEncId} and ecs.ACTION_TYPE = "
+			+ AggregationController.CO_ENC_DET_NOT_UNLOADED + " and exists  "
+			+ " (select null from t_cm_enc_cashout_stat_details ecsd  "
+			+ " where ecsd.ENCASHMENT_ID = ecs.ENCASHMENT_ID and ecsd.CASS_NUMBER = ecs.CASS_NUMBER  "
+			+ " and ecsd.ACTION_TYPE = " + AggregationController.CO_ENC_DET_LOADED + ")")
+	void insertEncashmentsPartAndOut_delete(@Param("pEncId") Integer pEncId);
+	
+	@Result(column = "CASS_NUMBER", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT DISTINCT CASS_NUMBER  FROM T_CM_CASHOUT_CASS_STAT  WHERE ENCASHMENT_ID = #{encId}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertRemainingsForCass_getCassStatLoop(@Param("encId") Integer encId);
+	
+	@Results({
+			@Result(column = "STAT_DATE", property = "key", javaType = Timestamp.class),
+			@Result(column = "CASS_COUNT", property = "value", javaType = Integer.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT STAT_DATE, CASS_COUNT  FROM T_CM_CASHOUT_CASS_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId}  AND CASS_NUMBER = #{cassNumber}  ORDER BY STAT_DATE")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Timestamp, Integer>> insertRemainingsForCass_getCassStatLoop2(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "CASS_COUNT", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT CASS_COUNT  FROM T_CM_ENC_CASHOUT_STAT_details  WHERE ENCASHMENT_ID = #{encId} "
+			+ " AND CASS_NUMBER = #{cassNumber}  AND ACTION_TYPE in (" + AggregationController.CO_ENC_DET_LOADED + ") ")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertRemainingsForCass_getRemainingCashAdd(@Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT sum(CASS_COUNT) as result FROM T_CM_ENC_CASHOUT_STAT_details  WHERE ENCASHMENT_ID = #{encId} "
+			+ " AND CASS_NUMBER = #{cassNumber}  AND ACTION_TYPE in (" + AggregationController.CO_ENC_DET_LOADED + ", "
+			+ AggregationController.CO_ENC_DET_NOT_UNLOADED_CA + ")")
+	@Options(useCache = true)
+	Integer insertRemainingsForCass_getRemainingCashAddNotUnloaded(@Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+
+	@Result(column = "result", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT MAX(STAT_DATE) as result  FROM T_CM_CASHOUT_CASS_STAT  WHERE  ATM_ID = #{atmId} "
+			+ " AND CASS_NUMBER = #{cassNumber}  AND ENCASHMENT_ID < #{encId}")
+	@Options(useCache = true)
+	Timestamp insertRemainingsForCass_getMaxStatDate(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+
+	@Result(column = "CASS_REMAINING", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT CASS_REMAINING  FROM T_CM_CASHOUT_CASS_STAT  WHERE STAT_DATE = #{statDate} "
+			+ " AND ATM_ID = #{atmId}  AND CASS_NUMBER = #{cassNumber} ")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertRemainingsForCass_getRemainingMaxStatDate(@Param("statDate") Timestamp statDate,
+			@Param("atmId") String atmId, @Param("cassNumber") Integer cassNumber);
+
+	@Update("UPDATE T_CM_CASHOUT_CASS_STAT SET CASS_REMAINING = #{cassRemaining} WHERE ATM_ID = #{atmId} "
+			+ "AND ENCASHMENT_ID = #{encId} AND CASS_NUMBER = #{cassNumber} AND STAT_DATE = #{statDate}")
+	void insertRemainingsForCass_update(@Param("cassRemaining") Integer cassRemaining, @Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber,
+			@Param("statDate") Timestamp statDate);
+	
+	@Results({
+			@Result(column = "stat_date", property = "first", javaType = Timestamp.class),
+			@Result(column = "CURR_REMAINING", property = "second", javaType = Integer.class),
+			@Result(column = "CASS_CURR", property = "third", javaType = Integer.class)
+	})
+	@ResultType(TripleObject.class)
+	@Select("select stat_date,sum(cass_remaining*cass_value) as CURR_REMAINING,CASS_CURR "
+			+ " from T_CM_CASHOUT_CASS_STAT ds  where  ATM_ID = #{pPid}  AND ENCASHMENT_ID = #{encId} "
+			+ " group by stat_date,cass_curr")
+	@Options(useCache = true, fetchSize = 1000)
+	List<TripleObject<Timestamp, Integer, Integer>> insertRemainingsForCurr_getCassStat(@Param("pPid") String pPid,
+			@Param("encId") Integer encId);
+
+	@Update("UPDATE T_CM_CASHOUT_CURR_STAT SET CURR_REMAINING = #{currRemaining} WHERE ATM_ID = #{atmId} "
+			+ "AND ENCASHMENT_ID = #{encId} AND CURR_CODE = #{currCode} AND STAT_DATE = #{statDate}")
+	void insertRemainingsForCurr_update(@Param("currRemaining") Integer currRemaining, @Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("statDate") Timestamp statDate);
+	
+	@Results({
+			@Result(column = "CASS_NUMBER", property = "first", javaType = Integer.class),
+			@Result(column = "CASS_CURR", property = "second", javaType = Integer.class),
+			@Result(column = "CASS_VALUE", property = "third", javaType = Integer.class)
+	})
+	@ResultType(TripleObject.class)
+	@Select("SELECT distinct CASS_NUMBER,CASS_CURR,CASS_VALUE  FROM T_CM_ENC_CASHOUT_STAT_details "
+			+ " WHERE ENCASHMENT_ID = #{encId}  AND ACTION_TYPE = " + AggregationController.CO_ENC_DET_LOADED)
+	@Options(useCache = true, fetchSize = 1000)
+	List<TripleObject<Integer, Integer, Integer>> insertZeroTakeOffsForCass_getCoStatDetails(
+			@Param("encId") Integer encId);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT STAT_DATE  FROM T_CM_CASHOUT_CASS_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId}  AND CASS_NUMBER = #{cassNumber} AND STAT_DATE = #{statDate}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Timestamp> insertZeroTakeOffsForCass_getFillStatDate(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber,
+			@Param("statDate") Timestamp statDate);
+	
+	@Result(column = "CASS_COUNT", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT CASS_COUNT FROM T_CM_ENC_CASHOUT_STAT_details  WHERE ENCASHMENT_ID = #{encId} "
+			+ " AND CASS_NUMBER = #{cassNumber} AND ACTION_TYPE in (" + AggregationController.CO_ENC_DET_LOADED + ")")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertZeroTakeOffsForCass_getStatDetailsLoad(@Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "CASS_COUNT", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT sum(CASS_COUNT) as CASS_COUNT  FROM T_CM_ENC_CASHOUT_STAT_details "
+			+ " WHERE ENCASHMENT_ID = #{encId}  AND CASS_NUMBER = #{cassNumber}  AND ACTION_TYPE in ("
+			+ AggregationController.CO_ENC_DET_LOADED + ", " + AggregationController.CO_ENC_DET_NOT_UNLOADED_CA + ")")
+	@Options(useCache = true, fetchSize = 1000)
+	Integer insertZeroTakeOffsForCass_getStatDetailsLoadUnload(@Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "result", javaType = Double.class)
+	@ResultType(Integer.class)
+	@Select("SELECT COALESCE(ds.AVAIL_COEFF,1) as result FROM t_cm_intgr_downtime_cashout ds "
+			+ "WHERE ds.PID = #{pid} AND ds.STAT_DATE = #{statDate}")
+	@Options(useCache = true)
+	Double insertZeroTakeOffsForCass_getDowntimeCo(@Param("pid") String pid, @Param("statDate") Timestamp statDate);
+	
+	@Results({
+			@Result(column = "CASS_REMAINING", property = "key", javaType = Integer.class),
+			@Result(column = "STAT_DATE", property = "value", javaType = Timestamp.class)
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT CASS_REMAINING,cs.STAT_DATE  FROM T_CM_CASHOUT_CASS_STAT cs  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId}  AND CASS_NUMBER = #{cassNumber} AND cs.STAT_DATE = #{statDate} ")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Integer, Timestamp>> insertZeroTakeOffsForCass_getCassStat(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber,
+			@Param("statDate") Timestamp statDate);
+	
+	@Insert("INSERT INTO T_CM_CASHOUT_CASS_STAT "
+			+ " (ATM_ID,STAT_DATE,ENCASHMENT_ID,CASS_VALUE,CASS_COUNT,CASS_TRANS_COUNT,CASS_CURR,CASS_REMAINING,CASS_NUMBER,AVAIL_COEFF) "
+			+ " VALUES "
+			+ " (#{atmId} ,#{statDate}, #{encId}, #{cassValue}, #{cassCount}, #{cassTrans}, #{cassCurr}, #{cassRemaining}, #{cassNumber}, #{coeff})")
+	void insertZeroTakeOffsForCass_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassValue") Integer cassValue, @Param("cassCount") Integer cassCount,
+			@Param("cassTrans") Integer cassTrans, @Param("cassCurr") Integer cassCurr,
+			@Param("cassRemaining") Integer cassRemaining, @Param("cassNumber") Integer cassNumber,
+			@Param("coeff") Double coeff);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT COUNT(*) as result FROM T_CM_CASHOUT_CASS_STAT  where  ATM_ID = #{atmId} AND STAT_DATE = #{statDate "
+			+ " AND ENCASHMENT_ID = #{encId}  AND CASS_VALUE = #{cassValue}  AND CASS_CURR = #{cassCurr} "
+			+ " AND CASS_NUMBER = #{cassNumber}")
+	@Options(useCache = true, fetchSize = 1000)
+	Integer insertZeroTakeOffsForCass_checkInsert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassValue") Integer cassValue, @Param("cassCurr") Integer cassCurr,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Update("UPDATE T_CM_CASHOUT_CASS_STAT  SET CASS_COUNT = #{cassCount},  CASS_TRANS_COUNT = #{cassTrans}, "
+			+ " CASS_REMAINING = #{cassRemaining},  AVAIL_COEFF = #{coeff}  where  ATM_ID = #{atmId} "
+			+ " AND STAT_DATE = #{statDate}  AND ENCASHMENT_ID = #{encId}  AND CASS_VALUE = #{cassValue} "
+			+ " AND CASS_CURR = #{cassCurr}  AND CASS_NUMBER = #{cassNumber}")
+	void insertZeroTakeOffsForCass_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassValue") Integer cassValue, @Param("cassCount") Integer cassCount,
+			@Param("cassTrans") Integer cassTrans, @Param("cassCurr") Integer cassCurr,
+			@Param("cassRemaining") Integer cassRemaining, @Param("cassNumber") Integer cassNumber,
+			@Param("coeff") Double coeff);
+	
+	@Result(column = "CURR_CODE", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("SELECT distinct CASS_CURR as CURR_CODE  FROM T_CM_ENC_CASHOUT_STAT_details "
+			+ " WHERE ENCASHMENT_ID = #{encId}  AND ACTION_TYPE = " + AggregationController.CO_ENC_DET_LOADED)
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertZeroTakeOffsForCurr_getCoStatDetails(@Param("encId") Integer encId);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT STAT_DATE  FROM T_CM_CASHOUT_CURR_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId}  AND CURR_CODE = #{currCode}  AND STAT_DATE = #{statDate}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Timestamp> insertZeroTakeOffsForCurr_getStatDate(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("currCode") Integer currCode, @Param("statDate") Timestamp statDate);
+
+	@Insert("INSERT INTO T_CM_CASHOUT_CURR_STAT "
+			+ " (ATM_ID,STAT_DATE,ENCASHMENT_ID,CURR_CODE,CURR_SUMM,CURR_TRANS_COUNT) VALUES "
+			+ " (#{atmId} ,#{statDate}, #{encId}, #{currCode}, #{currSumm}, #{cassTrans})")
+	void insertZeroTakeOffsForCurr_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("currSumm") Integer currSumm,
+			@Param("cassTrans") Integer cassTrans);
+	
+	@Results({ 
+			@Result(column = "BILLS_COUNT", property = "key", javaType = Integer.class),
+			@Result(column = "stat_Date", property = "value", javaType = Timestamp.class) 
+	})
+	@ResultType(ObjectPair.class)
+	@Select("select sum(COALESCE(bill_reject,0))+sum(COALESCE(bill_retract,0)) as BILLS_COUNT,truncToHour(datetime) as stat_Date "
+			+ " from t_cm_intgr_trans  WHERE atm_id = #{atmId} "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  group by truncToHour(datetime) "
+			+ " order by stat_Date")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Integer, Timestamp>> insertRejects_getIntgrParams(@Param("atmId") String atmId,
+			@Param("pEncDate") Timestamp pEncDate, @Param("pNextEncDate") Timestamp pNextEncDate);
+
+	@Insert("INSERT INTO T_CM_REJECT_STAT  (ATM_ID,STAT_DATE,ENCASHMENT_ID,BILLS_COUNT)  VALUES "
+			+ " (#{atmId} ,#{statDate}, #{encId}, #{count})")
+	void insertRejects_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("count") Integer count);
+	
+	@Result(column = "ATM_ID", javaType = String.class) 
+	@ResultType(String.class)
+	@Select("select ATM_ID from T_CM_REJECT_STAT "
+			+ " where ATM_ID=#{atmId} and STAT_DATE=#{statDate} and ENCASHMENT_ID=#{encId}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<String> insertRejects_checkInsert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId);
+
+	@Update("UPDATE T_CM_REJECT_STAT  SET BILLS_COUNT = BILLS_COUNT + #{count}  WHERE "
+			+ " ATM_ID = #{atmId}  AND  STAT_DATE = #{statDate}  AND  ENCASHMENT_ID = #{encId}")
+	void insertRejects_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("count") Integer count);
+	
+	@Results({ 
+			@Result(column = "BILLS_COUNT", property = "key", javaType = Integer.class),
+			@Result(column = "stat_Date", property = "value", javaType = Timestamp.class) 
+	})
+	@ResultType(ObjectPair.class)
+	@Select("select sum(note_rejected)+sum(note_retracted) as BILLS_COUNT,truncToHour(datetime) as stat_date "
+			+ " from t_cm_intgr_trans_md  WHERE terminal_id = #{atmId} "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  group by trunc(datetime,'HH24') "
+			+ " order by stat_Date")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Integer, Timestamp>> insertRejectsMd_getIntgrParams(@Param("atmId") String atmId,
+			@Param("pEncDate") Timestamp pEncDate, @Param("pNextEncDate") Timestamp pNextEncDate);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT DISTINCT STAT_DATE  FROM T_CM_REJECT_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId}  AND STAT_DATE = #{statDate}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Timestamp> insertZeroDaysForRejects_getStatDate(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("statDate") Timestamp statDate);
+	
+	@Results({ 
+			@Result(column = "BILLS_COUNT", property = "key", javaType = Integer.class),
+			@Result(column = "stat_Date", property = "value", javaType = Timestamp.class) 
+	})
+	@ResultType(ObjectPair.class)
+	@Select("SELECT STAT_DATE, BILLS_COUNT  FROM T_CM_REJECT_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId} ORDER BY STAT_DATE")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Integer, Timestamp>> insertRemainingsForRejects_select(@Param("atmId") String atmId,
+			@Param("encId") Integer encId);
+	
+	@Update("UPDATE T_CM_REJECT_STAT  SET BILLS_REMAINING = #{remaining}  WHERE ATM_ID = #{atmId} "
+			+ " AND ENCASHMENT_ID = #{encId} AND STAT_DATE = #{statDate}")
+	void insertRemainingsForRejects_update(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("statDate") Timestamp statDate, @Param("remaining") Integer remaining);
+	
+	@Results({
+			@Result(column = "bills", property = "first", javaType = Integer.class),
+			@Result(column = "denom", property = "second", javaType = Integer.class),
+			@Result(column = "enc_date", property = "third", javaType = Timestamp.class),
+			@Result(column = "cass_num", property = "fourth", javaType = Integer.class)
+	})
+	@ResultType(MultiObject.class)
+	@Select("select bills as bills, curr,denom, d as enc_date,cass_num FROM( "
+			+ "select 0 as BILLS, datetime as d, 0 as denom, -999 as CURR, -1 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind = " + AggregationController.CI_ENC_TRANSACTION_TYPE
+			+ " and atm_id = #{pPid} union all "
+			+ "select BILL_CASS1 as BILLS,DATETIME as d,denom_cass1 as denom, currency_cass1 as CURR,1 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_909_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS1 > 0 and CURRENCY_CASS1 > 0 union all "
+			+ "select BILL_CASS2 as BILLS,DATETIME as d,denom_cass2 as denom, currency_cass2 as CURR,2 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_909_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS2 > 0 and CURRENCY_CASS2 > 0 union all "
+			+ "select BILL_CASS3 as BILLS,DATETIME as d,denom_cass3 as denom, currency_cass3 as CURR,3 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_910_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS3 > 0 and CURRENCY_CASS3 > 0 union all "
+			+ "select BILL_CASS4 as BILLS,DATETIME as d,denom_cass4 as denom, currency_cass4 as CURR,4 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_910_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS4 > 0 and CURRENCY_CASS4 > 0 union all "
+			+ "select BILL_CASS5 as BILLS,DATETIME as d,denom_cass5 as denom, currency_cass5 as CURR,5 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_909_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS5 > 0 and CURRENCY_CASS5 > 0 union all "
+			+ "select BILL_CASS6 as BILLS,DATETIME as d,denom_cass6 as denom, currency_cass6 as CURR,6 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_909_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS6 > 0 and CURRENCY_CASS6 > 0 union all "
+			+ "select BILL_CASS7 as BILLS,DATETIME as d,denom_cass7 as denom, currency_cass7 as CURR,7 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_910_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS7 > 0 and CURRENCY_CASS7 > 0 union all "
+			+ "select BILL_CASS8 as BILLS,DATETIME as d,denom_cass8 as denom, currency_cass8 as CURR,8 as CASS_NUM,trans_type_ind "
+			+ "from t_cm_intgr_trans where trans_type_ind in(" + AggregationController.CR_910_ENC_TRANSACTION_TYPE
+			+ ") and atm_id = #{pPid} and DENOM_CASS8 > 0 and CURRENCY_CASS8 > 0 order by d "
+			+ ") ORDER BY ENC_DATE,CASS_NUM,trans_type_ind")
+	@Options(useCache = true, fetchSize = 1000)
+	List<MultiObject<Integer, Integer, Timestamp, Integer, ?, ?, ?, ?, ?, ?>> insertEcnashmentsCashIn_select(
+			@Param("pPid") String pPid);
+	
+	@Results({ 
+			@Result(column = "CASH_IN_ENCASHMENT_ID", property = "key", javaType = Integer.class),
+			@Result(column = "CASH_IN_ENC_DATE", property = "value", javaType = Timestamp.class) 
+	})
+	@ResultType(ObjectPair.class)
+	@Select("select st.CASH_IN_ENCASHMENT_ID,st.CASH_IN_ENC_DATE from t_cm_enc_cashin_stat st where "
+			+ "st.atm_id = #{atmId} and abs(dateDiffMin(st.CASH_IN_ENC_DATE, #{statDate})) < 15")
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Integer, Timestamp>> insertEcnashmentsCashIn_getEncIdAndDate(@Param("atmId") String atmId,
+			@Param("statDate") Timestamp statDate);
+	
+	@Insert("INSERT INTO T_CM_ENC_CASHIN_STAT (ATM_ID,CASH_IN_ENCASHMENT_ID,CASH_IN_ENC_DATE) VALUES "
+			+ " (#{atmId}, #{encId}, #{encDate})")
+	void insertEcnashmentsCashIn_insertWithoutSeq(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("encDate") Timestamp encDate);
+
+	@Insert("INSERT INTO t_cm_enc_cashin_stat_details "
+			+ "(CASH_IN_ENCASHMENT_ID,CASS_VALUE,CASS_CURR,CASS_COUNT,ACTION_TYPE,CASS_NUMBER) VALUES "
+			+ "(#{encId}, #{cassValue} , #{cassCurr}, #{cassCount}, " + AggregationController.CO_ENC_DET_LOADED
+			+ ", #{cassNumber})")
+	void insertEcnashmentsCashIn_insertDetails(@Param("encId") Integer encId, @Param("cassValue") Integer cassValue,
+			@Param("cassCurr") Integer cassCurr, @Param("cassCount") Integer cassCount,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Update("UPDATE t_cm_enc_cashin_stat_details SET CASS_CURR = #{cassCurr}, CASS_VALUE = #{cassValue} , "
+			+ "CASS_COUNT = #{cassCount} WHERE CASS_NUMBER = #{cassNumber} AND "
+			+ "CASH_IN_ENCASHMENT_ID = #{encId} AND ACTION_TYPE = " + AggregationController.CO_ENC_DET_LOADED)
+	void insertEcnashmentsCashIn_updateDetails(@Param("encId") Integer encId, @Param("cassValue") Integer cassValue,
+			@Param("cassCurr") Integer cassCurr, @Param("cassCount") Integer cassCount,
+			@Param("cassNumber") Integer cassNumber);
+
+	@Result(column = "ENC_DATE", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("select datetime as ENC_DATE  from t_cm_intgr_trans_md  where  oper_type = "
+			+ AggregationController.CI_ENC_TRANSACTION_TYPE + " and terminal_id = #{atmId} order by datetime")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Timestamp> insertEcnashmentsCashInMd_getEncDate(@Param("atmId") String atmId);
+	
+	@Insert("INSERT INTO T_CM_ENC_CASHIN_STAT  (ATM_ID,CASH_IN_ENCASHMENT_ID,CASH_IN_ENC_DATE)  VALUES "
+			+ " (#{atmId}, #{encId}, #{encDate})")
+	void insertEcnashmentsCashInMd_insert(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("Integer") Integer encDate);
 }
