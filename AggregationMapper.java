@@ -1065,4 +1065,537 @@ public interface AggregationMapper extends IMapper {
 	void insertCashInDenomStat_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
 			@Param("encId") Integer encId, @Param("denomCurr") Integer denomCurr,
 			@Param("denomCount") Integer denomCount, @Param("denomValue") Integer denomValue);
+	
+	@Results({
+			@Result(column = "trans_date", property = "first", javaType = Timestamp.class),
+			@Result(column = "denom", property = "second", javaType = Integer.class),
+			@Result(column = "BILLS_IN", property = "third", javaType = Integer.class),
+			@Result(column = "BILLS_OUT", property = "fourth", javaType = Integer.class),
+			@Result(column = "TRANS_COUNT_IN", property = "fifth", javaType = Integer.class),
+			@Result(column = "TRANS_COUNT_OUT", property = "sixth", javaType = Integer.class),
+			@Result(column = "CURR", property = "seventh", javaType = Integer.class),
+			@Result(column = "CASS_NUM", property = "eighth", javaType = Integer.class),
+			@Result(column = "AVAIL_COEFF", property = "ninth", javaType = Double.class)
+	})
+	@ResultType(MultiObject.class)
+	@Select("select  cs.PID as PID, cs.BILLS_IN, cs.BILLS_OUT,cs.trans_count_in,cs.trans_count_out,cs.trans_date , cs.denom, cs.CURR,cs.CASS_NUM, "
+			+ " COALESCE(ds.AVAIL_COEFF,1) as AVAIL_COEFF  FROM ( "
+			+ " select #{atmId} as PID,sum(BILLS_IN) as BILLS_IN,sum(BILLS_OUT) as BILLS_OUT, "
+			+ " sum(TRANS_COUNT_IN) as trans_count_in,sum(TRANS_COUNT_OUT) as trans_count_out, "
+			+ " truncToHour(d) as trans_date , denom, CURR, CASS_NUM  FROM(  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE + " then BILL_CASS1 "
+			+ " else 0 end as BILLS_OUT,  case when trans_type_ind = " + AggregationController.CREDIT_TRANSACTION_TYPE
+			+ " then BILL_CASS1  else 0 end as BILLS_IN,  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE + " then 1 "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass1 as denom, currency_cass1 as CURR,1 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS1 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS1 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS2  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS2  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass2 as denom, currency_cass2 as CURR,2 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS2 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS2 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + "  union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS3  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS3  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then 1 "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass3 as denom, currency_cass3 as CURR,3 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS3 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS3 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + "  union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS4  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS4  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then 1 "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass4 as denom, currency_cass4 as CURR,4 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS4 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS4 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + "  union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS5  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS5  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass5 as denom, currency_cass5 as CURR,5 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS5 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS5 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + "  union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS6  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS6  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then 1 "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass6 as denom, currency_cass6 as CURR,6 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS6 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS6 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + "  union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS7  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS7  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then 1 "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass7 as denom, currency_cass7 as CURR,7 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS7 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS7 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + "  union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS8  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS8  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then 1 "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then 1  else 0 end as TRANS_COUNT_IN, "
+			+ " DATETIME as d,denom_cass8 as denom, currency_cass8 as CURR,8 as CASS_NUM  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS8 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS8 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " "
+			+ " )GROUP BY truncToHour(d),denom, CURR,CASS_NUM  ORDER BY trans_date,CASS_NUM) cs "
+			+ " left outer join t_cm_intgr_downtime_cashin ds on (cs.PID = ds.PID and cs.trans_date = ds.stat_date)")
+	@Options(useCache = true, fetchSize = 1000)
+	List<MultiObject<Timestamp, Integer, Integer, Integer, Integer, Integer, Integer, Integer, Double, ?>> insertCashInCassStat_getTrans(
+			@Param("atmId") String atmId, @Param("pEncDate") Timestamp pEncDate,
+			@Param("pNextEncDate") Timestamp pNextEncDate);
+	
+	@Insert(" INSERT INTO T_CM_CASHIN_R_CASS_STAT "
+			+ " (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,CASS_VALUE,CASS_COUNT_IN,CASS_COUNT_OUT,CASS_TRANS_COUNT_IN,CASS_TRANS_COUNT_OUT,CASS_CURR,CASS_NUMBER,AVAIL_COEFF) "
+			+ " VALUES "
+			+ " (#{atmId} , #{statDate}, #{encId} , #{cassValue}, #{cassCountIn}, #{cassCountOut}, #{transCountIn}, #{transCountOut}, #{cassCurr}, #{cassNumber}, #{coeff})")
+	void insertCashInCassStat_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassValue") Integer cassValue,
+			@Param("cassCountIn") Integer cassCountIn, @Param("cassCountOut") Integer cassCountOut,
+			@Param("transCountIn") Integer transCountIn, @Param("transCountOut") Integer transCountOut,
+			@Param("cassCurr") Integer cassCurr, @Param("cassNumber") Integer cassNumber, @Param("coeff") Double coeff);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@Select("select COUNT(ATM_ID) as result from T_CM_CASHIN_R_CASS_STAT "
+			+ " where ATM_ID=#{atmId} and STAT_DATE=#{statDate} and CASH_IN_ENCASHMENT_ID=#{encId} and CASS_CURR=#{cassCurr} and CASS_NUMBER=#{cassNumber}")
+	@ResultType(Integer.class)
+	@Options(useCache = true)
+	Integer insertCashInCassStat_checkInsert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassCurr") Integer cassCurr,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Update(" UPDATE  T_CM_CASHIN_R_CASS_STAT  SET  CASS_COUNT_IN = CASS_COUNT_IN + #{cassCountIn}, "
+			+ " CASS_COUNT_OUT = CASS_COUNT_OUT + #{cassCountOut}, "
+			+ " CASS_TRANS_COUNT_IN = CASS_TRANS_COUNT_IN + #{transCountIn}, "
+			+ " CASS_TRANS_COUNT_OUT = CASS_TRANS_COUNT_OUT + #{transCountOut},  AVAIL_COEFF = #{coeff} "
+			+ " WHERE  ATM_ID = #{atmId}  AND  STAT_DATE = #{statDate}  AND "
+			+ " CASH_IN_ENCASHMENT_ID = #{encId}  AND  CASS_NUMBER = #{cassNumber}  AND "
+			+ " CASS_VALUE =  #{cassValue}  AND  CASS_CURR = #{cassCurr}")
+	void insertCashInCassStat_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassValue") Integer cassValue,
+			@Param("cassCountIn") Integer cassCountIn, @Param("cassCountOut") Integer cassCountOut,
+			@Param("transCountIn") Integer transCountIn, @Param("transCountOut") Integer transCountOut,
+			@Param("cassCurr") Integer cassCurr, @Param("cassNumber") Integer cassNumber, @Param("coeff") Double coeff);
+	
+	@Results({
+			@Result(column = "trans_date", property = "first", javaType = Timestamp.class),
+			@Result(column = "CURR", property = "second", javaType = Integer.class),
+			@Result(column = "SUMM_IN", property = "third", javaType = Integer.class),
+			@Result(column = "SUMM_OUT", property = "fourth", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT_IN", property = "fifth", javaType = Integer.class),
+			@Result(column = "CURR_TRANS_COUNT_OUT", property = "sixth", javaType = Integer.class)
+	})
+	@ResultType(MultiObject.class)
+	@Select("SELECT sum(bills_in*denom) as summ_in, sum(bills_out*denom) as summ_out, "
+			+ " truncToHour(d) as trans_date, CURR,  count(distinct TRANS_COUNT_IN) as curr_trans_count_in, "
+			+ " count(distinct TRANS_COUNT_OUT) as curr_trans_count_out  FROM(  select "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then BILL_CASS1 "
+			+ " else 0 end as BILLS_OUT,  case when trans_type_ind = " + AggregationController.CREDIT_TRANSACTION_TYPE
+			+ " then BILL_CASS1  else 0 end as BILLS_IN,  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass1 as denom, currency_cass1 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS1 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS1 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS2  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS2  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass2 as denom, currency_cass2 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS2 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS2 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS3  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS3  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass3 as denom, currency_cass3 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS3 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS3 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS4  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS4  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass4 as denom, currency_cass4 as CURR  union all  select "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then BILL_CASS5 "
+			+ " else 0 end as BILLS_OUT,  case when trans_type_ind = " + AggregationController.CREDIT_TRANSACTION_TYPE
+			+ " then BILL_CASS5  else 0 end as BILLS_IN,  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass5 as denom, currency_cass5 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS5 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate} and TYPE_CASS5 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS6  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS6  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass6 as denom, currency_cass6 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS6 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS6 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS7  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS7  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass7 as denom, currency_cass7 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS7 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate} and TYPE_CASS7 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " union all  select  case when trans_type_ind = "
+			+ AggregationController.DEBIT_TRANSACTION_TYPE
+			+ " then BILL_CASS8  else 0 end as BILLS_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then BILL_CASS8  else 0 end as BILLS_IN, "
+			+ " case when trans_type_ind = " + AggregationController.DEBIT_TRANSACTION_TYPE + " then utrnno "
+			+ " else 0 end as TRANS_COUNT_OUT,  case when trans_type_ind = "
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + " then utrnno  else 0 end as TRANS_COUNT_IN, "
+			+ " utrnno,DATETIME as d,denom_cass8 as denom, currency_cass8 as CURR  from t_cm_intgr_trans "
+			+ " where trans_type_ind in (" + AggregationController.DEBIT_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and atm_id = #{atmId}  and BILL_CASS8 > 0 "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate}  and TYPE_CASS8 = "
+			+ AggregationController.CASS_TYPE_RECYCLING + " )GROUP BY truncToHour(d), CURR  ORDER BY trans_date")
+	@Options(useCache = true, fetchSize = 1000)
+	List<MultiObject<Timestamp, Integer, Integer, Integer, Integer, Integer, ?, ?, ?, ?>> insertCashInCurrStat_getTrans(
+			@Param("atmId") String atmId, @Param("pEncDate") Timestamp pEncDate,
+			@Param("pNextEncDate") Timestamp pNextEncDate);
+
+	@Insert(" INSERT INTO T_CM_CASHIN_R_CURR_STAT "
+			+ " (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,CURR_CODE,CURR_SUMM_IN,CURR_SUMM_OUT,CURR_TRANS_COUNT_IN,CURR_TRANS_COUNT_OUT) "
+			+ " VALUES "
+			+ " (#{atmId} , #{statDate}, #{encId} , #{currCode}, #{currSummIn}, #{currSummOut}, #{currTransCountIn}, #{currTransCountOut})")
+	void insertCashInCurrStat_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("currSummIn") Integer currSummIn,
+			@Param("currSummOut") Integer currSummOut, @Param("currTransCountIn") Integer currTransCountIn,
+			@Param("currTransCountOut") Integer currTransCountOut);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@Select("select COUNT(ATM_ID) as result from T_CM_CASHIN_R_CURR_STAT "
+			+ " where ATM_ID=#{atmId} and STAT_DATE=#{statDate} and CASH_IN_ENCASHMENT_ID=#{encId} and CURR_CODE=#{currCode")
+	@ResultType(Integer.class)
+	@Options(useCache = true)
+	Integer insertCashInCurrStat_checkInsert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode);
+	
+	@Update(" UPDATE  T_CM_CASHIN_R_CURR_STAT  SET  CURR_SUMM_IN = CURR_SUMM_IN + #{currSummIn}, "
+			+ " CURR_SUMM_OUT = CURR_SUMM_OUT + #{currSummOut}, "
+			+ " CURR_TRANS_COUNT_IN = CURR_TRANS_COUNT_IN + #{currTransCountIn}, "
+			+ " CURR_TRANS_COUNT_OUT = CURR_TRANS_COUNT_OUT + #{currTransCountOut}  WHERE  ATM_ID = #{atmId} "
+			+ " AND  STAT_DATE = #{statDate}  AND  CASH_IN_ENCASHMENT_ID =  #{encId}  AND "
+			+ " CURR_CODE = #{currCode}")
+	void insertCashInCurrStat_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("currSummIn") Integer currSummIn,
+			@Param("currSummOut") Integer currSummOut, @Param("currTransCountIn") Integer currTransCountIn,
+			@Param("currTransCountOut") Integer currTransCountOut);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@Select("SELECT CASS_COUNT FROM T_CM_ENC_CASHIN_STAT_DETAILS WHERE CASH_IN_ENCASHMENT_ID = #{encId} "
+			+ "AND CASS_NUMBER = #{cassNumber} AND ACTION_TYPE in (" + AggregationController.CO_ENC_DET_LOADED + ")")
+	@ResultType(Integer.class)
+	@Options(useCache = true)
+	List<Integer> insertRemainingsForCashInCass_getRemainingCassCount(@Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "result", javaType = Timestamp.class)
+	@Select("SELECT MAX(STAT_DATE) as result FROM T_CM_CASHIN_R_CASS_STAT WHERE  ATM_ID = #{atmId} "
+			+ "AND CASS_NUMBER = #{cassNumber} AND CASH_IN_ENCASHMENT_ID < #{encId}")
+	@ResultType(Timestamp.class)
+	@Options(useCache = true)
+	Timestamp insertRemainingsForCashInCass_getMaxStatDate(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "CASS_REMAINING", javaType = Integer.class)
+	@Select("SELECT CASS_REMAINING FROM T_CM_CASHIN_R_CASS_STAT WHERE STAT_DATE = #{statDate} "
+			+ "AND ATM_ID = #{atmId} AND CASS_NUMBER = #{cassNumber}")
+	@ResultType(Integer.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertRemainingsForCashInCass_getRemaining(@Param("atmId") String atmId,
+			@Param("statDate") Timestamp statDate, @Param("cassNumber") Integer cassNumber);
+	
+	@Result(column = "CASS_NUMBER", javaType = Integer.class)
+	@Select("SELECT DISTINCT CASS_NUMBER FROM T_CM_CASHIN_R_CASS_STAT WHERE CASH_IN_ENCASHMENT_ID = #{encId}")
+	@ResultType(Integer.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertRemainingsForCashInCass_getCassStat(@Param("encId") Integer encId);
+	
+	@Results({
+			@Result(column = "STAT_DATE", property = "key", javaType = Timestamp.class),
+			@Result(column = "CASS_COUNT", property = "value", javaType = Integer.class)
+	})
+	@Select(" SELECT STAT_DATE, CASS_COUNT_IN-CASS_COUNT_OUT as CASS_COUNT  FROM T_CM_CASHIN_R_CASS_STAT "
+			+ " WHERE ATM_ID = #{atmId}  AND CASH_IN_ENCASHMENT_ID = #{encId} "
+			+ " AND CASS_NUMBER = #{cassNumber} ORDER BY STAT_DATE")
+	@ResultType(ObjectPair.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Timestamp, Integer>> insertRemainingsForCashInCass_getCassStat2(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber);
+	
+	@Update(" UPDATE T_CM_CASHIN_R_CASS_STAT  SET CASS_REMAINING = #{cassRemaining}  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId} AND CASS_NUMBER = #{cassNumber} AND STAT_DATE = #{statDate}")
+	void insertRemainingsForCashInCass_update(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("cassNumber") Integer cassNumber, @Param("cassRemaining") Integer cassRemaining,
+			@Param("statDate") Timestamp statDate);
+	
+	@Results({
+			@Result(column = "STAT_DATE", property = "first", javaType = Timestamp.class),
+			@Result(column = "CURR_REMAINING", property = "second", javaType = Integer.class),
+			@Result(column = "CASS_CURR", property = "third", javaType = Integer.class)
+	})
+	@Select("select stat_date,sum(cass_remaining*cass_value) as CURR_REMAINING,CASS_CURR "
+			+ " from T_CM_CASHIN_R_CASS_STAT ds  where  ATM_ID = #{atmId} AND CASH_IN_ENCASHMENT_ID = #{encId} "
+			+ " group by stat_date,cass_curr")
+	@ResultType(TripleObject.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<TripleObject<Timestamp, Integer, Integer>> insertRemainingsForCashInCurr_getCassStat(
+			@Param("atmId") String atmId, @Param("encId") Integer encId);
+	
+	@Update(" UPDATE T_CM_CASHIN_R_CURR_STAT  SET CURR_REMAINING = #{currRemaining}  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId} AND CURR_CODE = #{currCode} AND STAT_DATE = #{statDate}")
+	void insertRemainingsForCashInCurr_update(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("currCode") Integer currCode, @Param("cassRemaining") Integer cassRemaining,
+			@Param("statDate") Timestamp statDate);
+	
+	@Results({
+			@Result(column = "CASS_NUMBER", property = "first", javaType = Integer.class),
+			@Result(column = "CASS_CURR", property = "second", javaType = Integer.class),
+			@Result(column = "CASS_VALUE", property = "third", javaType = Integer.class)
+	})
+	@Select("SELECT distinct CASS_NUMBER,CASS_CURR,CASS_VALUE FROM T_CM_CASHIN_R_CASS_STAT "
+			+ " WHERE CASH_IN_ENCASHMENT_ID = #{encId}")
+	@ResultType(TripleObject.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<TripleObject<Integer, Integer, Integer>> insertZeroTakeOffsForCICass_getCiCassStat(
+			@Param("encId") Integer encId);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@Select("SELECT STAT_DATE FROM T_CM_CASHIN_R_CASS_STAT WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId} AND CASS_NUMBER = #{cassNumber}  AND STAT_DATE = #{statDate}")
+	@ResultType(Timestamp.class)
+	@Options(useCache = true)
+	List<Timestamp> insertRemainingsForCashInCass_getFillStatDate(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber,
+			@Param("statDate") Timestamp statDate);
+	
+	@Result(column = "result", javaType = Double.class)
+	@Select("SELECT COALESCE(ds.AVAIL_COEFF,1) as result  FROM t_cm_intgr_downtime_cashout ds  WHERE ds.PID = #{atmId} "
+			+ " AND ds.STAT_DATE = #{statDate}")
+	@ResultType(Double.class)
+	@Options(useCache = true)
+	List<Double> insertRemainingsForCashInCass_getFillStatDate(@Param("atmId") String atmId,
+			@Param("statDate") Timestamp statDate);
+	
+	@Results({
+			@Result(column = "CASS_REMAINING", property = "key", javaType = Integer.class),
+			@Result(column = "STAT_DATE", property = "value", javaType = Timestamp.class)
+	})
+	@Select("SELECT CASS_REMAINING,cs.STAT_DATE  FROM T_CM_CASHIN_R_CASS_STAT cs  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId}  AND CASS_NUMBER = #{cassNumber}  AND cs.STAT_DATE = #{statDate} ")
+	@ResultType(ObjectPair.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Timestamp, Integer>> insertRemainingsForCashInCass_getCassStat(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("cassNumber") Integer cassNumber, @Param("statDate") Timestamp statDate);
+	
+	@Insert("INSERT INTO T_CM_CASHIN_R_CASS_STAT "
+			+ " (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,CASS_VALUE,CASS_COUNT_IN,CASS_COUNT_OUT, "
+			+ " CASS_TRANS_COUNT_IN,CASS_TRANS_COUNT_OUT,CASS_CURR,CASS_REMAINING,CASS_NUMBER,AVAIL_COEFF) "
+			+ " VALUES "
+			+ " (#{atmId} , #{statDate}, #{encId} , #{cassValue}, #{cassCountIn}, #{cassCountOut}, #{cassTransCountIn}, "
+			+ "#{cassTransCountOut}, #{cassCurr}, #{remaining}, #{cassNumber}, #{coeff})")
+	void insertRemainingsForCashInCass_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("cassValue") Integer cassValue,
+			@Param("cassCountIn") Integer cassCountIn, @Param("cassCountOut") Integer cassCountOut,
+			@Param("transCountIn") Integer transCountIn, @Param("transCountOut") Integer transCountOut,
+			@Param("cassCurr") Integer cassCurr, @Param("cassNumber") Integer cassNumber, @Param("coeff") Double coeff);
+	
+	@Result(column = "CURR_CODE", javaType = Integer.class)
+	@Select("SELECT distinct CASS_CURR as CURR_CODE  FROM T_CM_CASHIN_R_CASS_STAT "
+			+ " WHERE CASH_IN_ENCASHMENT_ID = #{encId}")
+	@ResultType(Integer.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertZeroTakeOffsForCICurr_getCiStatDetails(@Param("encId") Integer encId);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@Select("SELECT STAT_DATE  FROM t_cm_cashin_r_curr_stat  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId}  AND CURR_CODE = #{currCode}  AND STAT_DATE = #{statDate} ")
+	@ResultType(Timestamp.class)
+	@Options(useCache = true)
+	List<Timestamp> insertZeroTakeOffsForCICurr_getFillstatDate(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("statDate") Timestamp statDate);
+	
+	@Insert("INSERT INTO T_CM_CASHIN_R_CURR_STAT "
+			+ " (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,CURR_CODE,CURR_SUMM_IN,CURR_SUMM_OUT,CURR_TRANS_COUNT_IN, CURR_TRANS_COUNT_OUT) "
+			+ " VALUES "
+			+ " (#{atmId} , #{statDate}, #{encId} , #{currCode}, #{currSummIn}, #{currSummOut}, #{currTransCountIn}, #{currTransCountOut})")
+	void insertZeroTakeOffsForCICurr_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("currCode") Integer currCode, @Param("currSummIn") Integer currSummIn,
+			@Param("currSummOut") Integer currSummOut, @Param("currTransCountIn") Integer transCountIn,
+			@Param("currTransCountOut") Integer transCountOut);
+	
+	@Results({
+			@Result(column = "BILLS_COUNT", property = "first", javaType = Integer.class),
+			@Result(column = "STAT_DATE", property = "second", javaType = Timestamp.class),
+			@Result(column = "AVAIL_COEFF", property = "third", javaType = Double.class)
+	})
+	@Select(" SELECT cs.BILLS_COUNT,cs.STAT_DATE,COALESCE(ds.AVAIL_COEFF,1) as AVAIL_COEFF  FROM "
+			+ " (select #{atmId} as PID,sum(note_cash_in) as BILLS_COUNT,truncToHour(datetime) as stat_Date "
+			+ " from t_cm_intgr_trans_md  WHERE oper_type in (" + AggregationController.EXCHANGE_TRANSACTION_TYPE + ","
+			+ AggregationController.CREDIT_TRANSACTION_TYPE + ")  and terminal_id = #{atmId} "
+			+ " and datetime between #{pEncDate} and #{pNextEncDate} group by truncToHour(datetime) "
+			+ " order by stat_date) cs "
+			+ " left outer join t_cm_intgr_downtime_cashin ds on (cs.PID = ds.PID and cs.stat_Date = ds.stat_date)")
+	@ResultType(TripleObject.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<TripleObject<Integer, Timestamp, Double>> insertCashInStatMd_getTrans(@Param("atmId") String atmId,
+			@Param("pEncDate") Timestamp pEncDate, @Param("pNextEncDate") Timestamp pNextEncDate);
+	
+	@Insert("INSERT INTO T_CM_CASHIN_STAT  (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,BILLS_COUNT,AVAIL_COEFF) "
+			+ " VALUES (#{atmId} , #{statDate}, #{encId} , #{billsCount}, #{coeff})")
+	void insertCashInStatMd_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("billsCount") Integer billsCount, @Param("coeff") Double coeff);
+	
+	@Result(column = "result", javaType = Integer.class)
+	@ResultType(Integer.class)
+	@Select("select ATM_ID from T_CM_CASHIN_STAT "
+			+ " where ATM_ID=#{atmId} and STAT_DATE=#{statDate} and CASH_IN_ENCASHMENT_ID=#{encId}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Integer> insertCashInStatMd_checkInsert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId);
+
+	@Update("UPDATE T_CM_CASHIN_STAT  SET BILLS_COUNT = BILLS_COUNT + #{billsCount},  AVAIL_COEFF = #{coeff} "
+			+ " WHERE  ATM_ID = #{atmId}  AND  STAT_DATE = #{statDate}  AND  CASH_IN_ENCASHMENT_ID = #{encId}")
+	void insertCashInStatMd_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("billsCount") Integer billsCount, @Param("coeff") Double coeff);
+	
+	@Result(column = "result", javaType = Double.class)
+	@ResultType(Double.class)
+	@Select("SELECT COALESCE(ds.AVAIL_COEFF,1) as result FROM t_cm_intgr_downtime_cashin ds  WHERE ds.PID = #{atmId} "
+			+ " AND ds.STAT_DATE = #{statDate}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Double> insertZeroDaysForCashIn_getAvailCoeff(@Param("atmId") String atmId,
+			@Param("statDate") Timestamp statDate);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT DISTINCT STAT_DATE FROM T_CM_CASHIN_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId}  AND STAT_DATE = #{statDate}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Timestamp> insertZeroDaysForCashIn_getFillStatDate(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("statDate") Timestamp statDate);
+	
+	@Result(column = "STAT_DATE", javaType = Timestamp.class)
+	@ResultType(Timestamp.class)
+	@Select("SELECT DISTINCT STAT_DATE  FROM T_CM_CASHIN_DENOM_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId} AND STAT_DATE = #{statDate}  AND DENOM_CURR = #{denomCurr}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Timestamp> insertZeroDaysForCashIn_getFillStatDateForCurr(@Param("atmId") String atmId,
+			@Param("encId") Integer encId, @Param("statDate") Timestamp statDate,
+			@Param("denomCurr") Integer denomCurr);
+	
+	@Insert("INSERT INTO T_CM_CASHIN_STAT  (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,BILLS_COUNT,AVAIL_COEFF) "
+			+ " VALUES (#{atmId} , #{statDate}, #{encId}, #{billsCount}, #{coeff})")
+	void insertZeroDaysForCashIn_insert(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("statDate") Timestamp statDate, @Param("billsCount") Integer billsCount,
+			@Param("coeff") Double coeff);
+	
+	@Insert("INSERT INTO T_CM_CASHIN_DENOM_STAT "
+			+ " (ATM_ID,STAT_DATE,CASH_IN_ENCASHMENT_ID,DENOM_CURR,DENOM_COUNT,DENOM_VALUE) "
+			+ " VALUES (#{atmId} , #{statDate}, #{encId}, #{denomCurr}, #{denomCount}, #{denomValue})")
+	void insertZeroDaysForCashIn_insertDenom(@Param("atmId") String atmId, @Param("encId") Integer encId,
+			@Param("statDate") Timestamp statDate, @Param("denomCurr") Integer denomCurr,
+			@Param("denomCount") Integer denomCount, @Param("denomValue") Integer denomValue);
+	
+	@Results({
+			@Result(column = "BILLS_COUNT", property = "key", javaType = Integer.class),
+			@Result(column = "STAT_DATE", property = "value", javaType = Timestamp.class)
+	})
+	@Select("SELECT STAT_DATE, BILLS_COUNT  FROM T_CM_CASHIN_STAT  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId} ORDER BY STAT_DATE")
+	@ResultType(ObjectPair.class)
+	@Options(useCache = true, fetchSize = 1000)
+	List<ObjectPair<Integer, Timestamp>> insertRemainingsForCashIn_getCassStat(@Param("atmId") String atmId,
+			@Param("encId") Integer encId);
+
+	@Update(" UPDATE T_CM_CASHIN_STAT SET BILLS_REMAINING = #{billsRemaining}  WHERE ATM_ID = #{atmId} "
+			+ " AND CASH_IN_ENCASHMENT_ID = #{encId} AND STAT_DATE = #{statDate}")
+	void insertRemainingsForCashIn_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("encId") Integer encId, @Param("billsRemaining") Integer billsRemaining);
+	
+	@Result(column = "result", javaType = Double.class)
+	@ResultType(Double.class)
+	@Select("SELECT COALESCE(AVAIL_COEFF,1) as result FROM t_cm_intgr_downtime_cashout WHERE PID = #{atmId} "
+			+ " AND STAT_DATE = #{statDate}")
+	@Options(useCache = true, fetchSize = 1000)
+	List<Double> insertDowntimeStatCashout_getAvailCoeff(@Param("atmId") String atmId,
+			@Param("statDate") Timestamp statDate);
+
+	@Update("UPDATE t_cm_intgr_downtime_cashout SET AVAIL_COEFF = #{coeff} WHERE PID = #{atmId} "
+			+ "AND STAT_DATE = #{statDate}")
+	void insertDowntimeStatCashout_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("coeff") Double coeff);
+
+	@Insert("INSERT INTO t_cm_intgr_downtime_cashout  (PID,STAT_DATE,AVAIL_COEFF) VALUES "
+			+ " (#{atmId},#{statDate},#{coeff})")
+	void insertDowntimeStatCashout_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("coeff") Double coeff);
+	
+	@Update("UPDATE t_cm_intgr_downtime_cashin  SET AVAIL_COEFF = #{coeff}  WHERE  PID = #{atmId} "
+			+ " AND STAT_DATE = #{statDate}")
+	void insertDowntimeStatCashIn_update(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("coeff") Double coeff);
+
+	@Insert("INSERT INTO t_cm_intgr_downtime_cashin  (PID,STAT_DATE,AVAIL_COEFF) VALUES "
+			+ " (#{atmId},#{statDate},#{coeff})")
+	void insertDowntimeStatCashIn_insert(@Param("atmId") String atmId, @Param("statDate") Timestamp statDate,
+			@Param("coeff") Double coeff);
 }
