@@ -16,10 +16,9 @@ public class WebTaskBuilder {
 	}
 
 	public String getGroupListParamBuilder(Map<String, Object> params) throws SQLException {
-		String groupIdParam = (String) params.get("groupIdParam");
 		StringBuilder sql = new StringBuilder(
 				"SELECT " + "id,description " + "FROM " + "T_CM_ATM_GROUP " + "WHERE " + "ID IN (");
-		sql.append(groupIdParam);
+		sql.append("#{typeId}");
 		sql.append(")  ORDER BY description");
 		return sql.toString();
 	}

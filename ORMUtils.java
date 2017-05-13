@@ -16,7 +16,7 @@ import ru.bpc.cm.utils.db.JdbcUtils;
  * 
  * @author Alimurad A. Ramazanov
  * @since 09.03.2017
- * @version 1.1.5
+ * @version 1.1.6
  *
  */
 public class ORMUtils {
@@ -166,5 +166,41 @@ public class ORMUtils {
 		}
 
 		return query;
+	}
+
+	/**
+	 * Возвращает первое значение из коллекции, если коллекция не пуста.
+	 * <p>
+	 * 
+	 * @param <T>
+	 * 
+	 * @param defaultValue
+	 *            - дефолтное значение, если коллекция пуста.
+	 * @param list
+	 *            - список некоторых значений.
+	 * @return первое значение, либо {@code null}, либо дефолтное значение.
+	 */
+	public static <T> T getSingleValue(List<T> list, T defaultValue) {
+		if (list == null || list.isEmpty()) {
+			return defaultValue;
+		}
+		return list.get(0);
+	}
+
+	/**
+	 * Возвращает первое значение из коллекции, если коллекция не пуста.
+	 * <p>
+	 * 
+	 * @param <T>
+	 * 
+	 * @param list
+	 *            - список некоторых значений.
+	 * @return первое значение, либо {@code null}.
+	 */
+	public static <T> T getSingleValue(List<T> list) {
+		if (list == null || list.isEmpty()) {
+			return null;
+		}
+		return list.get(0);
 	}
 }

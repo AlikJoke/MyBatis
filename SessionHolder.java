@@ -12,8 +12,8 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 
-import ru.bpc.cm.config.IMapper;
 import ru.bpc.cm.db.DataSourceJNDIDictionary;
+import ru.bpc.cm.orm.common.IMapper;
 
 @Stateless
 public class SessionHolder implements ISessionHolder {
@@ -23,19 +23,33 @@ public class SessionHolder implements ISessionHolder {
 
 	private Configuration configuration;
 
-	@Override
-	public SqlSession getSession(Class<?> clazz, ExecutorType... type) {
+	private void initConfigurationIfNotInit() {
 		if (configuration == null) {
 			TransactionFactory transactionFactory = new JdbcTransactionFactory();
 			Environment environment = new Environment("development", transactionFactory, dataSource);
 			configuration = new Configuration(environment);
 			configuration.setLazyLoadingEnabled(true);
 		}
+	}
 
-		if (IMapper.class.isAssignableFrom(clazz) && !configuration.hasMapper(clazz))
+	private void addMapperIfAbsent(Class<? extends IMapper> clazz) {
+		if (!configuration.hasMapper(clazz))
 			configuration.addMapper(clazz);
+	}
+
+	@Override
+	public SqlSession getSession(Class<? extends IMapper> clazz, ExecutorType... type) {
+		initConfigurationIfNotInit();
+		addMapperIfAbsent(clazz);
 		return type.length == 0 ? new SqlSessionFactoryBuilder().build(configuration).openSession()
 				: new SqlSessionFactoryBuilder().build(configuration).openSession(type[0]);
+	}
+
+	@Override
+	public SqlSession getBatchSession(Class<? extends IMapper> clazz) {
+		initConfigurationIfNotInit();
+		addMapperIfAbsent(clazz);
+		return new SqlSessionFactoryBuilder().build(configuration).openSession(ExecutorType.BATCH);
 	}
 
 	@Override

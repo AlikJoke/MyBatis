@@ -29,7 +29,7 @@ import ru.bpc.cm.utils.IntFilterItem;
  * 
  * @author Alimurad A. Ramazanov
  * @since 29.04.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface WebTaskMapper extends IMapper {
@@ -74,7 +74,7 @@ public interface WebTaskMapper extends IMapper {
 	@ResultType(Integer.class)
 	@Select("SELECT t.USER_ID FROM T_CM_TASK t WHERE t.TASK_ID = #{taskId} ")
 	@Options(useCache = true)
-	Integer getWebTaskUserId(@Param("taskId") Integer taskId);
+	List<Integer> getWebTaskUserId(@Param("taskId") Integer taskId);
 	
 	@Update("update T_CM_TASK SET LAST_EXEC=#{lastExecTime, jdbcType=TIMESTAMP} WHERE TASK_ID = #{taskId} ")
 	void setLastExecTime(@Param("taskId") Integer taskId, @Param("lastExecTime") Timestamp lastExecTime);
@@ -88,7 +88,7 @@ public interface WebTaskMapper extends IMapper {
 	@ResultType(Integer.class)
 	@SelectProvider(type = WebTaskBuilder.class, method = "getTaskIdForChangeWebTaskBuilder")
 	@Options(useCache = true)
-	Integer getTaskIdForChangeWebTask(@Param("session") SqlSession session);
+	List<Integer> getTaskIdForChangeWebTask(@Param("session") SqlSession session);
 
 	@Insert("INSERT INTO T_CM_TASK (TASK_ID,CRON,TYPE,DESCRIPTION,NAME,USER_ID) VALUES (#{taskId}, #{cron, jdbcType = VARCHAR}, "
 			+ "#{taskType}, #{descx, jdbcType = VARCHAR}, #{name, jdbcType = VARCHAR}, #{userId})")
@@ -121,5 +121,5 @@ public interface WebTaskMapper extends IMapper {
 	@ResultType(IntFilterItem.class)
 	@SelectProvider(type = WebTaskBuilder.class, method = "getGroupListParamBuilder")
 	@Options(useCache = true, fetchSize = 1000)
-	List<IntFilterItem> getGroupListParam(@Param("groupIdParam") String groupIdParam, @Param("typeId") Integer typeId);
+	List<IntFilterItem> getGroupListParam(@Param("typeId") Integer typeId);
 }
