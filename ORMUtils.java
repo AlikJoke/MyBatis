@@ -203,4 +203,24 @@ public class ORMUtils {
 		}
 		return list.get(0);
 	}
+
+	/**
+	 * Возвращает {@code value}, если {@code value != null}, иначе
+	 * {@code defaultValue}.
+	 * <p>
+	 * 
+	 * @param value
+	 *            - значение, проверяемое на существование; может быть
+	 *            {@code null}.
+	 * @param defaultValue
+	 *            - значение, которое будет выдано, если {@code value == null};
+	 *            не может быть {@code null}.
+	 * @return not-null value.
+	 */
+	public static <T> T getNotNullValue(T value, T defaultValue) {
+		if (value == null) {
+			return defaultValue;
+		}
+		return value;
+	}
 }

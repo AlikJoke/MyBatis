@@ -23,7 +23,7 @@ import ru.bpc.cm.utils.Pair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 29.04.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface CompareStatsMapper extends IMapper {
@@ -86,6 +86,28 @@ public interface CompareStatsMapper extends IMapper {
 	Double getPeriodEndLostsForCurr(@Param("atmId") Integer atmId, @Param("startDate") Timestamp startDate,
 			@Param("currCode") Integer currCode);
 
+	@Result(column = "losts", javaType = Double.class)
+	@ResultType(Double.class)
+	@Select("WITH curr_encashment_in AS ( SELECT atm_id, ecs.encashment_id, ecs.enc_date, "
+			+ "ecsd.cass_curr AS curr_code, SUM(ecsd.cass_count*ecsd.cass_value) AS denom_count "
+			+ "FROM t_cm_enc_cashout_stat ecs "
+			+ "JOIN t_cm_enc_cashout_stat_details ecsd ON (ecsd.encashment_id = ecs.encashment_id) "
+			+ "WHERE ecsd.action_type = 2 GROUP BY atm_id,enc_date,ecs.encashment_id,cass_curr ), "
+			+ "curr_encashment_out AS ( SELECT atm_id, ecs.encashment_id, ecs.enc_date, "
+			+ "ecsd.cass_curr AS curr_code, SUM(ecsd.cass_count*ecsd.cass_value) AS denom_count "
+			+ "FROM t_cm_enc_cashout_stat ecs "
+			+ "JOIN t_cm_enc_cashout_stat_details ecsd ON (ecsd.encashment_id = ecs.encashment_id) "
+			+ "WHERE ecsd.action_type = 1 GROUP BY atm_id,enc_date,ecs.encashment_id,cass_curr ) "
+			+ "SELECT SUM((ci.denom_count+ co.denom_count)*(co.enc_date - ci.enc_date)*24) as losts "
+			+ "FROM curr_encashment_in ci  "
+			+ "left OUTER JOIN v_cm_cashout_stat_enc2enc e2e on (ci.encashment_id = e2e.encashment_id) "
+			+ "left OUTER JOIN curr_encashment_out co on (co.atm_id = ci.atm_id and co.encashment_id = e2e.next_encashment_id "
+			+ "AND co.curr_code = ci.curr_code) WHERE ci.atm_id = #{atmId} AND ci.enc_date > #{startDate} "
+			+ "AND ci.enc_date < #{encDate} AND ci.curr_code = #{currCode} ")
+	@Options(useCache = true)
+	Double getEncLostsForCurr(@Param("atmId") Integer atmId, @Param("startDate") Timestamp startDate,
+			@Param("endDate") Timestamp endDate, @Param("currCode") Integer currCode);
+	
 	@Results({
 			@Result(column = "encashment_id", property = "fisrt", javaType = Double.class),
 			@Result(column = "CURR_CODE", property = "second", javaType = Integer.class),
@@ -101,8 +123,7 @@ public interface CompareStatsMapper extends IMapper {
 			+ "GROUP BY atm_id,enc_date,ecs.encashment_id,cass_curr ")
 	@Options(useCache = true, fetchSize = 1000)
 	List<TripleObject<Integer, Integer, Long>> getSplitEncCurrList(@Param("atmId") Integer atmId,
-			@Param("startDate") Timestamp startDate, @Param("endDate") Timestamp endDate,
-			@Param("currCode") Integer currCode);
+			@Param("startDate") Timestamp startDate, @Param("endDate") Timestamp endDate);
 
 	@Results({
 			@Result(column = "encashment_id", property = "fisrt", javaType = Double.class),

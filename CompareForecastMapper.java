@@ -75,7 +75,7 @@ public interface CompareForecastMapper extends IMapper {
 			+ "AND ecs.date_forthcoming_encashment >= #{startDate} AND ecs.date_forthcoming_encashment <= #{endDate} "
 			+ "order by date_forthcoming_encashment desc")
 	@Options(useCache = true, fetchSize = 1000)
-	ObjectPair<Integer, Long> getEncLostsForLastEnc(@Param("atmId") Integer atmId,
+	List<ObjectPair<Integer, Long>> getEncLostsForLastEnc(@Param("atmId") Integer atmId,
 			@Param("startDate") Timestamp startDate, @Param("endDate") Timestamp endDate);
 	
 	@ConstructorArgs({
