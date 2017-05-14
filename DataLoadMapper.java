@@ -24,7 +24,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 30.04.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface DataLoadMapper extends IMapper {
@@ -43,7 +43,7 @@ public interface DataLoadMapper extends IMapper {
 
 	@Update("UPDATE T_CM_ATM SET STATE= #{state} , CITY = #{city} ,STREET = #{street} ,"
 			+ "NAME = #{name} ,INST_ID = #{instId}, external_atm_id = #{extId}  WHERE atm_id = #{atmId}")
-	void insertAtms_update(@Param("atmId") Integer atmId, @Param("street") String street, @Param("city") String city,
+	void insertAtms_update(@Param("atmId") String atmId, @Param("street") String street, @Param("city") String city,
 			@Param("state") String state, @Param("instId") Integer instId, @Param("extId") String extId,
 			@Param("name") String name);
 
@@ -51,7 +51,7 @@ public interface DataLoadMapper extends IMapper {
 	@ResultType(Integer.class)
 	@Select("SELECT COUNT(1) as vCheck FROM t_cm_inst WHERE id = #{id}")
 	@Options(useCache = true)
-	Integer insertInsts_selectCount(@Param("id") Integer id);
+	Integer insertInsts_selectCount(@Param("id") String id);
 
 	@Insert("INSERT INTO t_cm_inst (id, description) VALUES (#{id}, #{descx})")
 	void insertInsts_insert(@Param("id") String id, @Param("descx") String descx);
@@ -76,7 +76,7 @@ public interface DataLoadMapper extends IMapper {
 
 	@Insert("INSERT INTO t_cm_intgr_trans_md_disp (OPER_ID,CASS_NUMBER,CASS_TYPE,FACE,CURRENCY, "
 			+ "NOTE_DISPENSED, NOTE_REMAINED) VALUES (#{operId}, #{cassNumber}, #{cassType}, #{face}, #{curr},#{dispensed}, #{remained})")
-	void insertTransactionsMultiDisp_disps(@Param("operId") String operId, @Param("cassNumber") Integer cassNumber,
+	void insertTransactionsMultiDisp_disps(@Param("operId") Integer operId, @Param("cassNumber") Integer cassNumber,
 			@Param("cassType") Integer cassType, @Param("face") Integer face, @Param("curr") Integer curr,
 			@Param("dispensed") Integer dispensed, @Param("remained") Integer remained);
 
@@ -128,8 +128,13 @@ public interface DataLoadMapper extends IMapper {
 
 	@Delete("DELETE FROM t_cm_enc_cashout_stat_details WHERE "
 			+ "encashment_id in (select encashment_id from t_cm_enc_cashout_stat where atm_id=#{atmId}) AND "
-			+ "encashment_id < #{encId}")
+			+ "cash_in_encashment_id < #{encId}")
 	void deleteOldStats_deleteDetails(@Param("atmId") Integer atmId, @Param("encId") Integer encId);
+	
+	@Delete("DELETE FROM t_cm_enc_cashin_stat_details WHERE "
+			+ "cash_in_encashment_id in (select cash_in_encashment_id from t_cm_enc_cashin_stat where atm_id=#{atmId}) AND "
+			+ "encashment_id < #{encId}")
+	void deleteOldStats_deleteDetailsCashIn(@Param("atmId") Integer atmId, @Param("encId") Integer encId);
 
 	@Results({
 			@Result(column = "atm_id", property = "key", javaType = Integer.class),
@@ -171,14 +176,13 @@ public interface DataLoadMapper extends IMapper {
 	List<ObjectPair<Long, Timestamp>> saveParams_selectLastTransInfo();
 	
 	@Results({
-			@Result(column = "lastUtrnno", property = "key", javaType = Long.class),
-			@Result(column = "lastTransDatetime", property = "value", javaType = Timestamp.class)
+			@Result(column = "LAST_UTRNNO", property = "key", javaType = Long.class),
+			@Result(column = "LAST_TRANS_DATETIME", property = "value", javaType = Timestamp.class)
 	})
 	@ResultType(ObjectPair.class)
-	@Select("SELECT COALESCE(MAX(utrnno),0) as lastUtrnno ,COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as lastTransDatetime "
-			+ " FROM t_cm_intgr_trans")
-	List<ObjectPair<Long, Timestamp>> saveParams_selectParams();
-	
+	@Select("select LAST_UTRNNO, LAST_TRANS_DATETIME from t_cm_intgr_params")
+	List<ObjectPair<Long, Timestamp>> saveParams_selectPairs();
+
 	@Results({
 			@Result(column = "lastUtrnno", property = "key", javaType = Long.class),
 			@Result(column = "lastTransDatetime", property = "value", javaType = Timestamp.class)
