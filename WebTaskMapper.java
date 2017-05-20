@@ -102,15 +102,15 @@ public interface WebTaskMapper extends IMapper {
 	@Delete("DELETE FROM T_CM_TASK WHERE TASK_ID = #{taskId}")
 	void changeWebTask_deleteFromTask(@Param("taskId") Integer taskId);
 
-	@Update("UPDATE T_CM_TASK SET CRON = #{cron}, DESCRIPTION = #{descx}, NAME = #{name} WHERE TASK_ID = #{taskId}")
+	@Update("UPDATE T_CM_TASK SET CRON = #{cron, jdbcType = VARCHAR}, DESCRIPTION = #{descx, jdbcType = VARCHAR}, NAME = #{name} WHERE TASK_ID = #{taskId}")
 	void changeWebTask_update(@Param("taskId") Integer taskId, @Param("cron") String cron, @Param("descx") String descx,
 			@Param("name") String name);
 
-	@Insert("INSERT INTO T_CM_TASK_PARAM(TASK_ID, VALUE, TYPE) VALUES(#{taskId}, #{value}, #{taskType})")
+	@Insert("INSERT INTO T_CM_TASK_PARAM(TASK_ID, VALUE, TYPE) VALUES(#{taskId}, #{value, jdbcType = VARCHAR}, #{taskType})")
 	void insertWebTaskParams(@Param("taskId") Integer taskId, @Param("value") String value,
 			@Param("taskType") Integer taskType);
 
-	@Update("UPDATE T_CM_TASK_PARAM SET VALUE = #{value} WHERE TASK_ID = #{taskId} and TYPE = #{taskType}")
+	@Update("UPDATE T_CM_TASK_PARAM SET VALUE = #{value, jdbcType = VARCHAR} WHERE TASK_ID = #{taskId} and TYPE = #{taskType}")
 	void updateWebTaskParams(@Param("taskId") Integer taskId, @Param("value") String value,
 			@Param("taskType") Integer taskType);
 	

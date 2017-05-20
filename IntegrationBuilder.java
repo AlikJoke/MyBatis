@@ -12,7 +12,7 @@ public class IntegrationBuilder {
 		return query;
 	}
 
-	public String loadAtmTrans_getIntgrLastUtrnnoComplex(Map<String, Object> params) {
+	public String loadAtmTrans_getIntgrLastUtrnnoComplexBuilder(Map<String, Object> params) {
 		@SuppressWarnings("unchecked")
 		List<Integer> vAtmList = (List<Integer>) params.get("vAtmList");
 		StringBuilder intgrLastUtrnno = new StringBuilder(

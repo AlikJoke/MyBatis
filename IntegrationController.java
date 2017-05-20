@@ -1027,7 +1027,7 @@ public class IntegrationController {
 									lastAtmIndex + 999 > vAtmList.size() ? vAtmList.size() : lastAtmIndex + 999),
 							"ATM_ID"));
 					lastAtmIndex += 1000;
-					session.delete(deleteSQL.toString());
+					mapper.truncate(deleteSQL.toString());
 					deleteSQL.delete(originalSqlSize + 1, deleteSQL.length());
 				}
 
@@ -1082,7 +1082,7 @@ public class IntegrationController {
 					deleteSQL.append(CmUtils.getIdListInClause(atms.subList(lastAtmIndex,
 							lastAtmIndex + 999 > atms.size() ? atms.size() : lastAtmIndex + 999), "ATM_ID"));
 					lastAtmIndex += 1000;
-					session.delete(deleteSQL.toString());
+					mapper.truncate(deleteSQL.toString());
 					deleteSQL.delete(originalSqlSize + 1, deleteSQL.length());
 				}
 
@@ -1148,7 +1148,7 @@ public class IntegrationController {
 										lastAtmIndex + 999 > vAtmList.size() ? vAtmList.size() : lastAtmIndex + 999),
 								"ATM_ID"));
 						lastAtmIndex += 1000;
-						session.update(updateCassettesNotPresentSQL.toString());
+						mapper.update(updateCassettesNotPresentSQL.toString());
 						updateCassettesNotPresentSQL.delete(originalSqlSize + 1, updateCassettesNotPresentSQL.length());
 					}
 
@@ -1214,7 +1214,7 @@ public class IntegrationController {
 									lastAtmIndex + 999 > vAtmList.size() ? vAtmList.size() : lastAtmIndex + 999),
 							"ATM_ID"));
 					lastAtmIndex += 1000;
-					session.update(updateCassettesNotPresentSQL.toString());
+					mapper.update(updateCassettesNotPresentSQL.toString());
 					updateCassettesNotPresentSQL.delete(originalSqlSize + 1, updateCassettesNotPresentSQL.length());
 				}
 

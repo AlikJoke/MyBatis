@@ -35,4 +35,9 @@ public class AggregationBuilder {
 		sb.append(") ");
 		return sb.toString();
 	}
+	
+	public String simpleQueryBuilder(Map<String, Object> params) {
+		String query = (String) params.get("query");
+		return query;
+	}
 }

@@ -24,7 +24,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 06.05.2017
- * @version 1.0.1
+ * @version 1.0.2
  *
  */
 public interface IntegrationMapper extends IMapper {

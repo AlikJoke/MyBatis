@@ -144,8 +144,8 @@ public class DbJobController {
 		clearTrans(sessionHolder, api, atmList);
 	}
 
-	public static void executeClearIntgrTransJob(ISessionHolder sessionHolder, ICashManagementAPI api) throws SQLException {
-		clearTrans(sessionHolder, api);
+	public static void executeClearIntgrTransJob(Connection connection, ICashManagementAPI api) throws SQLException {
+		clearTrans(connection, api);
 	}
 
 	private static void clearTrans(ISessionHolder sessionHolder, ICashManagementAPI api, List<Integer> atmList)
@@ -153,8 +153,8 @@ public class DbJobController {
 		DataLoadController.truncateTrans(sessionHolder, atmList);
 	}
 
-	private static void clearTrans(ISessionHolder sessionHolder, ICashManagementAPI api) throws SQLException {
-		DataLoadController.truncateAllTrans(sessionHolder);
+	private static void clearTrans(Connection connection, ICashManagementAPI api) throws SQLException {
+		DataLoadController.truncateAllTrans(connection);
 	}
 
 	public static void executeLoadAtmCassettesBalancesJob(ISessionHolder sessionHolder, ICashManagementAPI api)
@@ -199,10 +199,10 @@ public class DbJobController {
 	private static void load_stat(AtomicInteger interruptFlag, ISessionHolder sessionHolder, Connection connection, ICashManagementAPI api)
 			throws SQLException {
 		if (!(interruptFlag.get() > 0)) {
-			DataLoadController.truncateTrans(sessionHolder);
+			DataLoadController.truncateTrans(connection);
 			IntegrationController.load_atm_trans(interruptFlag, sessionHolder, api);
 			IntegrationController.load_atm_downtime(interruptFlag, sessionHolder, api);
-			AggregationController.prepare_downtimes(interruptFlag, connection);
+			//AggregationController.prepare_downtimes(interruptFlag, connection);
 		} else {
 
 		}
@@ -214,22 +214,22 @@ public class DbJobController {
 		// DataLoadController.truncateTrans(connection);
 		IntegrationController.load_atm_error_trans(sessionHolder, api);
 		IntegrationController.load_atm_downtime(interruptFlag, sessionHolder, api);
-		AggregationController.prepare_downtimes(interruptFlag, connection);
+		//AggregationController.prepare_downtimes(interruptFlag, connection);
 	}
 
 	private static void load_stat(AtomicInteger interruptFlag, ISessionHolder sessionHolder, Connection connection, ICashManagementWSAPI restEjb)
 			throws SQLException {
-		DataLoadController.truncateTrans(sessionHolder);
+		DataLoadController.truncateTrans(connection);
 		IntegrationController.load_atm_trans(connection, restEjb);
 		IntegrationController.load_atm_downtime(connection, restEjb);
-		AggregationController.prepare_downtimes(interruptFlag, connection);
+		//AggregationController.prepare_downtimes(interruptFlag, connection);
 	}
 
 	private static void load_stat(AtomicInteger interruptFlag, Connection connection, ISessionHolder sessionHolder, ICashManagementAPI api,
 			Date dateFrom, List<Integer> atmList, Long lastUtrnno) throws SQLException {
 		IntegrationController.load_atm_trans(sessionHolder, api, dateFrom, atmList, lastUtrnno);
 		IntegrationController.load_atm_downtime(sessionHolder, api, atmList);
-		AggregationController.prepare_downtimes(interruptFlag, connection);
+		//AggregationController.prepare_downtimes(interruptFlag, connection);
 
 	}
 
@@ -237,7 +237,7 @@ public class DbJobController {
 			ISessionHolder sessionHolder, Date dateFrom, List<Integer> atmList, Long lastUtrnno) throws SQLException {
 		IntegrationController.load_atm_trans(sessionHolder, restEjb, dateFrom, atmList, lastUtrnno);
 		IntegrationController.load_atm_downtime(connection, restEjb, atmList);
-		AggregationController.prepare_downtimes(interruptFlag, connection);
+		//AggregationController.prepare_downtimes(interruptFlag, connection);
 	}
 
 	private static void load_reversals(Connection connection, ICashManagementWSAPI restEjb, List<Integer> atmList,
@@ -254,8 +254,8 @@ public class DbJobController {
 
 	private static void aggregate_stat(DataSource dataSource, AtomicInteger interruptFlag, ISessionHolder sessionHolder, Connection connection,
 			ICashManagementAPI api, CmDbJobBean bean) throws SQLException, ExtendedSQLException, InterruptedException {
-		AggregationController.aggregate_cash_out(interruptFlag, dataSource, bean);
-		AggregationController.aggregate_cash_in(interruptFlag, dataSource);
+		//AggregationController.aggregate_cash_out(interruptFlag, dataSource, bean);
+		//AggregationController.aggregate_cash_in(interruptFlag, dataSource);
 		DataLoadController.saveParams(interruptFlag, sessionHolder);
 		IntegrationController.load_atm_cassettes_statuses(interruptFlag, sessionHolder, api);
 	}
@@ -263,8 +263,8 @@ public class DbJobController {
 	private static void aggregate_stat_err_atms(DataSource dataSource, AtomicInteger interruptFlag,
 			ISessionHolder sessionHolder, Connection connection, ICashManagementAPI api, CmDbJobBean bean)
 			throws SQLException, ExtendedSQLException, InterruptedException {
-		AggregationController.aggregate_cash_out(interruptFlag, dataSource, bean);
-		AggregationController.aggregate_cash_in(interruptFlag, dataSource);
+		//AggregationController.aggregate_cash_out(interruptFlag, dataSource, bean);
+		//AggregationController.aggregate_cash_in(interruptFlag, dataSource);
 		DataLoadController.saveParamsForErrAtm(sessionHolder);
 		IntegrationController.load_atm_cassettes_statuses(interruptFlag, sessionHolder, api);
 	}
@@ -281,13 +281,13 @@ public class DbJobController {
 	private static void load_and_aggregate_stat(DataSource dataSource, AtomicInteger interruptFlag,
 			ISessionHolder sessionHolder, Connection connection, ICashManagementAPI api, Date dateFrom, Date dateTo, CmDbJobBean jobBean)
 			throws SQLException, InterruptedException {
-		DataLoadController.truncateTrans(sessionHolder);
+		DataLoadController.truncateTrans(connection);
 		// DataLoadController.truncateTrans(connection, dateFrom, dateTo);
 		IntegrationController.load_atm_trans(sessionHolder, api, dateFrom, dateTo);
 		IntegrationController.load_atm_downtime(sessionHolder, api, dateFrom, dateTo);
-		AggregationController.prepare_downtimes(interruptFlag, connection);
-		AggregationController.aggregate_cash_out(interruptFlag, dataSource, jobBean);
-		AggregationController.aggregate_cash_in(interruptFlag, dataSource);
+		//AggregationController.prepare_downtimes(interruptFlag, connection);
+		//AggregationController.aggregate_cash_out(interruptFlag, dataSource, jobBean);
+		//AggregationController.aggregate_cash_in(interruptFlag, dataSource);
 		DataLoadController.saveParams(interruptFlag, sessionHolder);
 		IntegrationController.load_atm_cassettes_statuses(interruptFlag, sessionHolder, api);
 	}

@@ -24,7 +24,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 30.04.2017
- * @version 1.0.1
+ * @version 1.0.2
  *
  */
 public interface DataLoadMapper extends IMapper {
@@ -199,5 +199,4 @@ public interface DataLoadMapper extends IMapper {
 	@Select("SELECT COALESCE(MAX(oper_id),0) as lastUtrnno ,COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as lastTransDatetime "
 			+ " FROM t_cm_intgr_trans_md")
 	List<ObjectPair<Long, Timestamp>> saveParamsMultiDisp_lastTransInfo();
-
 }

@@ -47,7 +47,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			List<RepCurrWdwlRemItem> repStats = mapper.getReportCoCurrWithdrawalRemainAtm(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress());
 
 			int currentAtmID = 0;
@@ -116,7 +117,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			report.addAll(mapper.getReportCoCurrWithdrawalRemainGroup(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 		} catch (Exception e) {
 			_logger.error("", e);
@@ -143,7 +145,8 @@ public class ReportsWdwlRemController {
 			List<RepCurrWdwlRemRecItem> stats = new ArrayList<RepCurrWdwlRemRecItem>();
 			List<RepCurrWdwlRemRecItem> repStats = mapper.getReportCrCurrWithdrawalRemainAtm(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress());
 			boolean isFirstAtm = true;
 
@@ -200,7 +203,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			report.addAll(mapper.getReportCrCurrWithdrawalRemainGroup(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 			for (RepCurrWdwlRemRecItem item : report) {
 				item.setAtmID(groupId);
@@ -227,7 +231,8 @@ public class ReportsWdwlRemController {
 
 			stats.addAll(mapper.getReportCiBillWithdrawalRemainAtm(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					Integer.valueOf(repFilter.getAtmId()), repFilter.getNameAndAddress()));
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getNameAndAddress()));
 
 			for (RepCurrWdwlRemItem item : stats) {
 				if (item.getAtmID() != currentAtmID) {
@@ -265,7 +270,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			report.addAll(mapper.getReportCiBillWithdrawalRemainGroup(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					Integer.valueOf(repFilter.getAtmId()), repFilter.getNameAndAddress()));
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getNameAndAddress()));
 			for (RepCurrWdwlRemItem item : report) {
 				item.setAtmID(groupId);
 				item.setCurrCode(CashManagementConstants.CASH_IN_CURR_CODE);
@@ -296,7 +302,8 @@ public class ReportsWdwlRemController {
 			stats.addAll(
 					mapper.getReportCiCurrWithdrawalRemainAtm(repFilter, new Timestamp(repFilter.getDateTo().getTime()),
 							new Timestamp(repFilter.getDateFrom().getTime()), repFilter.getWdwlRemCurrCode(),
-							Integer.valueOf(repFilter.getAtmId()), repFilter.getNameAndAddress()));
+							repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
+							repFilter.getNameAndAddress()));
 			boolean isFirstAtm = true;
 
 			for (RepCurrWdwlRemItem item : stats) {
@@ -357,7 +364,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			report.addAll(mapper.getReportCiCurrWithdrawalRemainGroup(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 			for (RepCurrWdwlRemItem item : report) {
 				item.setAtmID(groupId);
@@ -382,7 +390,8 @@ public class ReportsWdwlRemController {
 			List<RepDenomWdwlRemItem> stats = new ArrayList<RepDenomWdwlRemItem>();
 			stats.addAll(mapper.getReportCoDenomWithdrawalRemainAtm(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 			boolean isFirstAtm = true;
 
@@ -426,7 +435,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			report.addAll(mapper.getReportCoDenomWithdrawalRemainGroup(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 
 			for (RepDenomWdwlRemItem item : report) {
@@ -452,7 +462,8 @@ public class ReportsWdwlRemController {
 			List<RepDenomWdwlRemRecItem> stats = new ArrayList<RepDenomWdwlRemRecItem>();
 			stats.addAll(mapper.getReportCrDenomWithdrawalRemainAtm(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 			boolean isFirstAtm = true;
 
@@ -495,7 +506,8 @@ public class ReportsWdwlRemController {
 			ReportsWdwlRemMapper mapper = session.getMapper(getMapperClass());
 			report.addAll(mapper.getReportCrDenomWithdrawalRemainGroup(repFilter,
 					new Timestamp(repFilter.getDateTo().getTime()), new Timestamp(repFilter.getDateFrom().getTime()),
-					repFilter.getWdwlRemCurrCode(), Integer.valueOf(repFilter.getAtmId()),
+					repFilter.getWdwlRemCurrCode(),
+					repFilter.getAtmId() == null ? null : Integer.valueOf(repFilter.getAtmId()),
 					repFilter.getNameAndAddress()));
 			for (RepDenomWdwlRemRecItem item : report) {
 				item.setAtmID(groupId);

@@ -109,7 +109,7 @@ public interface CompareStatsMapper extends IMapper {
 			@Param("endDate") Timestamp endDate, @Param("currCode") Integer currCode);
 	
 	@Results({
-			@Result(column = "encashment_id", property = "fisrt", javaType = Double.class),
+			@Result(column = "encashment_id", property = "first", javaType = Double.class),
 			@Result(column = "CURR_CODE", property = "second", javaType = Integer.class),
 			@Result(column = "CURR_SUMM", property = "third", javaType = Long.class) 
 	})
@@ -126,7 +126,7 @@ public interface CompareStatsMapper extends IMapper {
 			@Param("startDate") Timestamp startDate, @Param("endDate") Timestamp endDate);
 
 	@Results({
-			@Result(column = "encashment_id", property = "fisrt", javaType = Double.class),
+			@Result(column = "encashment_id", property = "first", javaType = Integer.class),
 			@Result(column = "CURR_CODE", property = "second", javaType = Integer.class),
 			@Result(column = "CURR_SUMM", property = "third", javaType = Long.class) 
 	})

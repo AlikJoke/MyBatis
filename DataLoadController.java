@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,7 +243,7 @@ public class DataLoadController {
 				mapper.flush();
 			}
 
-			session.delete("DELETE FROM T_CM_ATM_CASSETTES WHERE CASS_IS_PRESENT = 0");
+			mapper.truncate("DELETE FROM T_CM_ATM_CASSETTES WHERE CASS_IS_PRESENT = 0");
 
 		} finally {
 			session.close();
@@ -258,7 +259,7 @@ public class DataLoadController {
 		int check = 0;
 		try {
 			DataLoadMapper mapper = session.getMapper(getMapperClass());
-			session.delete("DELETE FROM T_CM_INTGR_CASS_BALANCE");
+			mapper.truncate("DELETE FROM T_CM_INTGR_CASS_BALANCE");
 
 			for (IAtmCassBalance filter : atmCassBalList) {
 
@@ -292,12 +293,14 @@ public class DataLoadController {
 	public static Date getDowntimeLastLoadedDate(ISessionHolder sessionHolder) throws SQLException {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<Timestamp> results = session.selectList("SELECT last_downtime_datetime FROM t_cm_intgr_params");
+			DataLoadMapper mapper = session.getMapper(getMapperClass());
+			List<Timestamp> results = mapper
+					.getTimestampValues("SELECT last_downtime_datetime as result FROM t_cm_intgr_params");
 			if (ORMUtils.getSingleValue(results) != null) {
 				return ORMUtils.getSingleValue(results);
 			} else {
-				Timestamp result = session
-						.selectOne("SELECT MIN(stat_date) as last_downtime_datetime FROM t_cm_cashout_curr_stat");
+				Timestamp result = mapper
+						.getTimestampValue("SELECT MIN(stat_date) as result FROM t_cm_cashout_curr_stat");
 				return result;
 			}
 		} finally {
@@ -308,7 +311,8 @@ public class DataLoadController {
 	public static long getLastLoadedTransactionId(ISessionHolder sessionHolder) throws SQLException {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<Long> result = session.selectList("SELECT last_utrnno FROM t_cm_intgr_params");
+			DataLoadMapper mapper = session.getMapper(getMapperClass());
+			List<Long> result = mapper.getLongValues("SELECT last_utrnno as result FROM t_cm_intgr_params");
 			return ORMUtils.getSingleValue(result, 0L);
 		} finally {
 			session.close();
@@ -318,7 +322,9 @@ public class DataLoadController {
 	public static Date getCassCheckDatetime(ISessionHolder sessionHolder) throws SQLException {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<Timestamp> results = session.selectList("SELECT cass_check_datetime FROM t_cm_intgr_params");
+			DataLoadMapper mapper = session.getMapper(getMapperClass());
+			List<Timestamp> results = mapper
+					.getTimestampValues("SELECT cass_check_datetime as result FROM t_cm_intgr_params");
 			Timestamp result = null;
 			if ((result = ORMUtils.getSingleValue(results)) != null) {
 				return CmUtils.getNVLValue(result, new Date());
@@ -332,8 +338,9 @@ public class DataLoadController {
 	public static long getLastInsertedOperationIdMultiDisp(ISessionHolder sessionHolder) throws SQLException {
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 		try {
-			List<Long> results = session
-					.selectList("SELECT COALESCE(max(OPER_ID),0) as last_utrnno FROM t_cm_intgr_trans_md");
+			DataLoadMapper mapper = session.getMapper(getMapperClass());
+			List<Long> results = mapper
+					.getLongValues("SELECT COALESCE(max(OPER_ID),0) as last_utrnno FROM t_cm_intgr_trans_md");
 			return ORMUtils.getSingleValue(results, 0L);
 		} finally {
 			session.close();
@@ -341,32 +348,35 @@ public class DataLoadController {
 	}
 
 	public static void prepareDowntimes(AtomicInteger interruptFlag, Connection connection) throws SQLException {
-		AggregationController.prepare_downtimes(interruptFlag, connection);
+		// AggregationController.prepare_downtimes(interruptFlag, connection);
 	}
 
-	public static void truncateTrans(ISessionHolder sessionHolder) throws SQLException {
-		SqlSession session = sessionHolder.getBatchSession(getMapperClass());
+	public static void truncateTrans(Connection connection) throws SQLException {
+		java.sql.Statement stmt = null;
 		try {
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_period"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_cashout"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_cashin"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_cash_in"));
-			session.flushStatements();
+			stmt = connection.createStatement();
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans_md"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_period"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_cashout"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_cashin"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans_cash_in"));
+			stmt.executeBatch();
 		} finally {
-			session.close();
+			stmt.close();
 		}
 	}
 
 	public static void truncateTrans(ISessionHolder sessionHolder, Date dateFrom, Date dateTo) throws SQLException {
-		SqlSession session = sessionHolder.getBatchSession(getMapperClass());
+		SqlSession session = sessionHolder.getSession(getMapperClass());
+		java.sql.Statement stmt = null;
 		try {
+			stmt = session.getConnection().createStatement();
 			truncateTransTable(sessionHolder, "t_cm_intgr_trans", "DATETIME", dateFrom, dateTo);
 			truncateTransTable(sessionHolder, "t_cm_intgr_trans_md_disp", "DATETIME", dateFrom, dateTo);
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md_disp"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_period"));
+			stmt.addBatch(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md_disp"));
+			stmt.addBatch(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md"));
+			stmt.addBatch(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_period"));
 			truncateTransTable(sessionHolder, "t_cm_intgr_downtime_cashout", "STAT_DATE", dateFrom, dateTo);
 			truncateTransTable(sessionHolder, "t_cm_intgr_downtime_cashin", "STAT_DATE", dateFrom, dateTo);
 			// stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection,
@@ -376,8 +386,9 @@ public class DataLoadController {
 			truncateTransTable(sessionHolder, "t_cm_intgr_trans_cash_in", "DATETIME", dateFrom, dateTo);
 			// stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection,
 			// "t_cm_intgr_trans_cash_in"));
-			session.flushStatements();
+			stmt.executeBatch();
 		} finally {
+			stmt.close();
 			session.close();
 		}
 	}
@@ -448,8 +459,8 @@ public class DataLoadController {
 		_logger.debug("Executing saveParams method");
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 
-		String lastDowntimeSQL = "SELECT MAX(end_date) as lastDowntimeDatetime " + " FROM t_cm_intgr_downtime_period";
-		String checkSQL = "SELECT count(1) from t_cm_intgr_params";
+		String lastDowntimeSQL = "SELECT MAX(end_date) as result " + " FROM t_cm_intgr_downtime_period";
+		String checkSQL = "SELECT count(1) as result from t_cm_intgr_params";
 
 		if (!(interruptFlag.get() > 0)) {
 
@@ -468,13 +479,13 @@ public class DataLoadController {
 					lastTransDatetime = JdbcUtils.getTimestamp(result.getValue());
 				}
 
-				Timestamp downtime = session.selectOne(lastDowntimeSQL);
+				Timestamp downtime = mapper.getTimestampValue(lastDowntimeSQL);
 				if (downtime != null) {
 					lastDowntimeDatetime = JdbcUtils.getTimestamp(downtime);
 				}
 
 				if (lastUtrnno > 0) {
-					Integer count = session.selectOne(checkSQL);
+					Integer count = mapper.getIntegerValue(checkSQL);
 					vCheck = ORMUtils.getNotNullValue(count, 0);
 
 					if (vCheck == 0) {
@@ -514,8 +525,8 @@ public class DataLoadController {
 		_logger.debug("Executing saveParams method");
 		SqlSession session = sessionHolder.getSession(getMapperClass());
 
-		String lastDowntimeSQL = "SELECT MAX(end_date) as lastDowntimeDatetime " + " FROM t_cm_intgr_downtime_period";
-		String checkSQL = "SELECT count(1) from t_cm_intgr_params";
+		String lastDowntimeSQL = "SELECT MAX(end_date) as result " + " FROM t_cm_intgr_downtime_period";
+		String checkSQL = "SELECT count(1) as result from t_cm_intgr_params";
 
 		try {
 			DataLoadMapper mapper = session.getMapper(getMapperClass());
@@ -533,13 +544,13 @@ public class DataLoadController {
 				lastTransDatetime = JdbcUtils.getTimestamp(result.getValue());
 			}
 
-			Timestamp downtime = session.selectOne(lastDowntimeSQL);
+			Timestamp downtime = mapper.getTimestampValue(lastDowntimeSQL);
 			if (downtime != null) {
 				lastDowntimeDatetime = JdbcUtils.getTimestamp(downtime);
 			}
 
 			if (lastUtrnno > 0) {
-				Integer count = session.selectOne(checkSQL);
+				Integer count = mapper.getIntegerValue(checkSQL);
 				vCheck = ORMUtils.getNotNullValue(count, 0);
 
 				if (vCheck == 0) {
@@ -606,7 +617,7 @@ public class DataLoadController {
 				lastTransDatetime = JdbcUtils.getTimestamp(result.getValue());
 			}
 
-			Timestamp downtime = session.selectOne(lastDowntimeSQL.toString());
+			Timestamp downtime = mapper.getTimestampValue(lastDowntimeSQL.toString());
 			if (downtime != null) {
 				lastDowntimeDatetime = JdbcUtils.getTimestamp(downtime);
 			}
@@ -672,13 +683,13 @@ public class DataLoadController {
 				lastTransDatetime = JdbcUtils.getTimestamp(result.getValue());
 			}
 
-			Timestamp downtime = session.selectOne(lastDowntimeSQL.toString());
+			Timestamp downtime = mapper.getTimestampValue(lastDowntimeSQL.toString());
 			if (downtime != null) {
 				lastDowntimeDatetime = JdbcUtils.getTimestamp(downtime);
 			}
 
 			if (lastUtrnno > 0) {
-				vCheck = ORMUtils.getNotNullValue((Integer) session.selectOne(checkSQL), 0);
+				vCheck = ORMUtils.getNotNullValue(mapper.getIntegerValue(checkSQL), 0);
 
 				if (vCheck == 0) {
 					mapper.saveParams_insert(lastUtrnno, JdbcUtils.getSqlTimestamp(lastDowntimeDatetime),
@@ -694,40 +705,44 @@ public class DataLoadController {
 	}
 
 	public static void truncateTrans(ISessionHolder sessionHolder, List<Integer> atmList) throws SQLException {
-		SqlSession session = sessionHolder.getBatchSession(getMapperClass());
+		SqlSession session = sessionHolder.getSession(getMapperClass(), ExecutorType.REUSE);
+		java.sql.Statement stmt = null;
 		try {
-			session.delete(
+			stmt = session.getConnection().createStatement();
+			stmt.addBatch(
 					ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_trans", "atm_id", atmList));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md_disp"));
-			session.delete(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_trans_md", "terminal_id",
+			stmt.addBatch(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md_disp"));
+			stmt.addBatch(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_trans_md", "terminal_id",
 					atmList));
-			session.delete(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_downtime_period", "pid",
+			stmt.addBatch(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_downtime_period", "pid",
 					atmList));
-			session.delete(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_downtime_cashout", "pid",
+			stmt.addBatch(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_downtime_cashout", "pid",
 					atmList));
-			session.delete(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_downtime_cashin", "pid",
+			stmt.addBatch(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_downtime_cashin", "pid",
 					atmList));
-			session.delete(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_trans_cash_in", "atm_id",
+			stmt.addBatch(ORMUtils.getDeleteFromTableFieldInConditional(session, "t_cm_intgr_trans_cash_in", "atm_id",
 					atmList));
-			session.flushStatements();
+			stmt.executeBatch();
 		} finally {
+			stmt.close();
 			session.close();
 		}
 	}
 
-	public static void truncateAllTrans(ISessionHolder sessionHolder) throws SQLException {
-		SqlSession session = sessionHolder.getBatchSession(getMapperClass());
+	public static void truncateAllTrans(Connection connection) throws SQLException {
+		java.sql.Statement stmt = null;
 		try {
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md_disp"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_md"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_period"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_cashout"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_downtime_cashin"));
-			session.delete(ORMUtils.getTruncateTableUnrecoverable(session, "t_cm_intgr_trans_cash_in"));
-			session.flushStatements();
+			stmt = connection.createStatement();
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans_md_disp"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans_md"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_period"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_cashout"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_cashin"));
+			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans_cash_in"));
+			stmt.executeBatch();
 		} finally {
-			session.close();
+			stmt.close();
 		}
 	}
 

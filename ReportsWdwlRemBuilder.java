@@ -1,5 +1,6 @@
 package ru.bpc.cm.reports.orm.builders;
 
+import java.sql.SQLException;
 import java.util.Map;
 
 import ru.bpc.cm.items.reports.ReportFilter;
@@ -9,7 +10,7 @@ import ru.bpc.cm.utils.db.QueryConstructor;
 
 public class ReportsWdwlRemBuilder {
 
-	public String getReportCoCurrWithdrawalRemainAtmBuilder(Map<String, Object> params) {
+	public String getReportCoCurrWithdrawalRemainAtmBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "select ds.ATM_ID,ds.stat_date,ds.curr_code,ds.curr_summ,ds.curr_remaining,ci.code_a3, encashment_id "
 				+ "from T_CM_CASHOUT_CURR_STAT ds join T_CM_CURR ci on (ds.curr_code = ci.code_n3) "
@@ -28,7 +29,7 @@ public class ReportsWdwlRemBuilder {
 			querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 		}
 		querConstr.setQueryTail("order by ATM_ID,curr_code,stat_date, encashment_id ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -38,7 +39,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCoCurrWithdrawalRemainGroupBuilder(Map<String, Object> params) {
+	public String getReportCoCurrWithdrawalRemainGroupBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "SELECT ds.stat_date, ds.curr_code, sum(ds.curr_summ) as CURR_SUMM, "
 				+ "sum(CURR_REMAINING) as CURR_REMAINING, ci.code_a3 FROM ( SELECT "
@@ -64,7 +65,7 @@ public class ReportsWdwlRemBuilder {
 		querConstr.setQueryTail(") ds GROUP BY ds.ATM_ID,ds.STAT_DATE,ds.curr_remaining,ds.CURR_CODE ) ds "
 				+ "join T_CM_CURR ci on (ds.curr_code = ci.code_n3) GROUP BY ds.stat_date,ds.curr_code,ci.code_a3 "
 				+ "order by curr_Code,stat_date ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -74,7 +75,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCrCurrWithdrawalRemainAtmBuilder(Map<String, Object> params) {
+	public String getReportCrCurrWithdrawalRemainAtmBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "select ds.ATM_ID,ds.stat_date,ds.curr_code, "
 				+ "ds.curr_summ_in, ds.curr_summ_out, ds.curr_remaining, "
@@ -95,7 +96,7 @@ public class ReportsWdwlRemBuilder {
 			querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 		}
 		querConstr.setQueryTail("order by ATM_ID,curr_code,stat_date,cash_in_encashment_id ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -105,7 +106,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCrCurrWithdrawalRemainGroupBuilder(Map<String, Object> params) {
+	public String getReportCrCurrWithdrawalRemainGroupBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "SELECT ds.stat_date, ds.curr_code, sum(ds.CURR_SUMM_IN) as CURR_SUMM_IN, "
 				+ "sum(ds.CURR_SUMM_OUT) as CURR_SUMM_OUT, sum(CURR_REMAINING) as CURR_REMAINING, ci.code_a3 "
@@ -132,7 +133,7 @@ public class ReportsWdwlRemBuilder {
 		querConstr.setQueryTail(") ds GROUP BY ds.ATM_ID,ds.STAT_DATE,ds.curr_remaining,ds.CURR_CODE ) ds "
 				+ "join T_CM_CURR ci on (ds.curr_code = ci.code_n3) GROUP BY ds.stat_date,ds.curr_code,ci.code_a3 "
 				+ "order by curr_Code,stat_date ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -142,7 +143,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCiBillWithdrawalRemainAtmBuilder(Map<String, Object> params) {
+	public String getReportCiBillWithdrawalRemainAtmBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "select ds.ATM_ID, ds.stat_date, ds.BILLS_COUNT as curr_summ, "
 				+ "ds.BILLS_REMAINING as curr_remaining, cash_in_encashment_id as encashment_id "
@@ -161,7 +162,7 @@ public class ReportsWdwlRemBuilder {
 			querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 		}
 		querConstr.setQueryTail("order by ATM_ID,stat_date, cash_in_encashment_id ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -171,7 +172,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCiBillWithdrawalRemainGroupBuilder(Map<String, Object> params) {
+	public String getReportCiBillWithdrawalRemainGroupBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "SELECT ds.stat_date, sum(ds.curr_summ) as CURR_SUMM, "
 				+ "sum(CURR_REMAINING) as CURR_REMAINING FROM ( SELECT ds.ATM_ID,ds.STAT_DATE, "
@@ -179,7 +180,7 @@ public class ReportsWdwlRemBuilder {
 				+ "SELECT ds.ATM_ID,ds.STAT_DATE,ds.BILLS_COUNT as CURR_SUMM, LAST_VALUE(ds.BILLS_REMAINING) over "
 				+ "(partition by ds.ATM_ID,ds.STAT_DATE ORDER BY ds.stat_date) as CURR_REMAINING "
 				+ "FROM T_CM_CASHIN_STAT ds join T_CM_ATM ai on (ds.ATM_ID = ai.ATM_ID) "
-				+ "WHERE ds.STAT_DATE < {dateTo} AND ds.atm_id in (select id from t_cm_temp_atm_list) "
+				+ "WHERE ds.STAT_DATE < #{dateTo} AND ds.atm_id in (select id from t_cm_temp_atm_list) "
 				+ "AND ds.STAT_DATE > #{dateFrom} ";
 		QueryConstructor querConstr = new QueryConstructor();
 		querConstr.setQueryBody(sql.toString(), true);
@@ -194,7 +195,7 @@ public class ReportsWdwlRemBuilder {
 		}
 		querConstr.setQueryTail(") ds GROUP BY ds.ATM_ID,ds.STAT_DATE,ds.curr_remaining ) ds "
 				+ "GROUP BY ds.stat_date order by stat_date ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -204,7 +205,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCiCurrWithdrawalRemainAtBuilder(Map<String, Object> params) {
+	public String getReportCiCurrWithdrawalRemainAtmBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "select ds.ATM_ID,ds.stat_date,ds.cash_in_encashment_id,ds.CURR_SUMM, "
 				+ "sum(ds.CURR_SUMM) over (partition by ds.ATM_ID,ds.cash_in_encashment_id,ds.denom_curr "
@@ -229,7 +230,7 @@ public class ReportsWdwlRemBuilder {
 		}
 		querConstr.setQueryTail(" group by ds.ATM_ID,ds.stat_date,ds.cash_in_encashment_id,ds.denom_curr, ci.code_a3 "
 				+ ") ds order by ds.ATM_ID,DENOM_CURR,STAT_DATE, ds.cash_in_encashment_id ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -239,7 +240,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCoDenomWithdrawalRemainAtmBuilder(Map<String, Object> params) {
+	public String getReportCoDenomWithdrawalRemainAtmBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "select ds.ATM_ID,ds.stat_date,ds.denom_value, ds.denom_curr,ds.denom_count as DENOM_COUNT, "
 				+ "ds.denom_remaining as DENOM_REMAINING,ci.code_a3, encashment_id "
@@ -259,7 +260,7 @@ public class ReportsWdwlRemBuilder {
 			querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 		}
 		querConstr.setQueryTail(" order by ds.ATM_ID,DENOM_CURR,DENOM_VALUE desc,STAT_DATE,encashment_id ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -269,7 +270,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCiCurrWithdrawalRemainGroupBuilder(Map<String, Object> params) {
+	public String getReportCiCurrWithdrawalRemainGroupBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "SELECT ds.stat_date,ds.denom_curr as denom_curr,"
 				+ "sum(ds.CURR_SUMM) as CURR_SUMM,sum(ds.CURR_REMAINING) as CURR_REMAINING,ds.code_a3 FROM ("
@@ -294,7 +295,7 @@ public class ReportsWdwlRemBuilder {
 		}
 		querConstr.setQueryTail("group by ds.ATM_ID,ds.stat_date,ds.cash_in_encashment_id,ds.denom_curr, ci.code_a3 "
 				+ ") ds ) ds group by ds.stat_date,ds.denom_curr,ds.code_a3 order by DENOM_CURR,STAT_DATE ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -304,7 +305,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCoDenomWithdrawalRemainGroupBuilder(Map<String, Object> params) {
+	public String getReportCoDenomWithdrawalRemainGroupBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "SELECT ds.stat_date, ds.curr_code,ds.denom_value, sum(ds.curr_summ) as CURR_SUMM, "
 				+ "sum(CURR_REMAINING) as CURR_REMAINING, ci.code_a3 FROM ( SELECT "
@@ -331,7 +332,7 @@ public class ReportsWdwlRemBuilder {
 				+ ") ds join T_CM_CURR ci on (ds.curr_code = ci.code_n3) "
 				+ "GROUP BY ds.stat_date,ds.curr_code,ds.denom_value,ci.code_a3 "
 				+ "order by curr_code,denom_value,stat_date ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -341,7 +342,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCrDenomWithdrawalRemainAtmBuilder(Map<String, Object> params) {
+	public String getReportCrDenomWithdrawalRemainAtmBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "select ds.ATM_ID,ds.stat_date,ds.denom_value,ds.denom_curr,"
 				+ "ds.denom_count_in as DENOM_COUNT_IN,ds.denom_count_out as DENOM_COUNT_OUT,"
@@ -362,7 +363,7 @@ public class ReportsWdwlRemBuilder {
 			querConstr.addSimpleExpression("atm_name_addr", ")", " ");
 		}
 		querConstr.setQueryTail("order by ds.ATM_ID,DENOM_CURR,DENOM_VALUE desc,STAT_DATE,cash_in_encashment_id ");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
@@ -372,7 +373,7 @@ public class ReportsWdwlRemBuilder {
 		return query;
 	}
 
-	public String getReportCrDenomWithdrawalRemainGroupBuilder(Map<String, Object> params) {
+	public String getReportCrDenomWithdrawalRemainGroupBuilder(Map<String, Object> params) throws SQLException {
 		ReportFilter repFilter = (ReportFilter) params.get("filter");
 		String sql = "SELECT ds.stat_date, ds.curr_code,ds.denom_value, "
 				+ "sum(ds.CURR_SUMM_IN) as CURR_SUMM_IN, sum(ds.CURR_SUMM_OUT) as CURR_SUMM_OUT, "
@@ -403,7 +404,7 @@ public class ReportsWdwlRemBuilder {
 						+ "join T_CM_CURR ci on (ds.curr_code = ci.code_n3) "
 						+ "GROUP BY ds.stat_date,ds.curr_code,ds.denom_value,ci.code_a3 "
 						+ "order by curr_code,denom_value,stat_date");
-		String query = querConstr.toString();
+		String query = querConstr.getQuery();
 		if (repFilter.getAtmId() != null) {
 			query.replaceFirst("//?", "#{atmId}");
 		}
