@@ -24,7 +24,7 @@ import ru.bpc.cm.utils.ObjectPair;
  * 
  * @author Alimurad A. Ramazanov
  * @since 06.05.2017
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 public interface IntegrationMapper extends IMapper {
@@ -86,7 +86,7 @@ public interface IntegrationMapper extends IMapper {
 	@ResultType(ObjectPair.class)
 	@Select("SELECT MIN(utrnno)-1 AS res1, MAX(utrnno) AS res2 FROM t_cm_intgr_trans")
 	@Options(useCache = true)
-	List<ObjectPair<Long, Long>> loadAtmTrans_getIntgrLastUtrnno();
+	ObjectPair<Long, Long> loadAtmTrans_getIntgrLastUtrnno();
 	
 	@Results({
 			@Result(column = "atm_id", property = "key", javaType = Integer.class),
@@ -95,7 +95,7 @@ public interface IntegrationMapper extends IMapper {
 	@ResultType(ObjectPair.class)
 	@Select("SELECT atm_id, datetime FROM t_cm_intgr_trans t where t.utrnno = #{operId}")
 	@Options(useCache = true, fetchSize = 1000)
-	List<ObjectPair<Long, Long>> loadAtmTrans_getIntgrTransAtmIdDt(@Param("operId") Long operId);
+	List<ObjectPair<Integer, Timestamp>> loadAtmTrans_getIntgrTransAtmIdDt(@Param("operId") Long operId);
 
 	@Insert("INSERT INTO t_cm_intgr_trans_cash_in (ATM_ID,UTRNNO,DATETIME,TRANS_TYPE_IND, "
 			+ "BILL_DENOM,BILL_CURR,BILL_NUM) VALUES (#{atmId},#{operId},#{dt},{operType}, #{denom},"
@@ -119,7 +119,7 @@ public interface IntegrationMapper extends IMapper {
 			+ "min(LAST_TRANS_DATETIME) as LAST_TRANS_DATETIME from T_CM_ATM_INTGR_LAST last, "
 			+ "T_CM_ATM_INTGR_ERROR err where last.ATM_ID=err.ATM_ID")
 	@Options(useCache = true, fetchSize = 1000)
-	List<ObjectPair<Long, Long>> loadAtmErrorTrans_getMinStartTrans();
+	ObjectPair<Long, Timestamp> loadAtmErrorTrans_getMinStartTrans();
 	
 	@Delete("delete from T_CM_INTGR_TRANS where exists (select last.ATM_ID as ATM_ID, last.LAST_UTRNNO as LAST_UTRNNO, "
 			+ "last.LAST_TRANS_DATETIME as LAST_TRANS_DATETIME from T_CM_ATM_INTGR_LAST last, T_CM_ATM_INTGR_ERROR err "
@@ -155,7 +155,7 @@ public interface IntegrationMapper extends IMapper {
 	@Select("SELECT COALESCE(MAX(utrnno),0) as res1, COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as res2 "
 			+ "FROM t_cm_intgr_trans")
 	@Options(useCache = true)
-	List<ObjectPair<Integer, Timestamp>> saveParams_getLastUtrnnoAndDatetime();
+	ObjectPair<Integer, Timestamp> saveParams_getLastUtrnnoAndDatetime();
 
 	@Insert("INSERT INTO t_cm_intgr_params (LAST_UTRNNO,LAST_DOWNTIME_DATETIME,LAST_TRANS_DATETIME) VALUES "
 			+ "(#{vLastUtrnno},#{vLastDowntimeDatetime},#{vLastTransDatetime})")
@@ -176,12 +176,12 @@ public interface IntegrationMapper extends IMapper {
 	@ResultType(ObjectPair.class)
 	@Select("SELECT COALESCE(MAX(oper_id),0) as res1, COALESCE(MAX(datetime),CURRENT_TIMESTAMP) as res2 FROM t_cm_intgr_trans_md")
 	@Options(useCache = true)
-	List<ObjectPair<Integer, Timestamp>> saveParamsMultiDisp_getLastUtrnnoAndDatetime();
+	ObjectPair<Integer, Timestamp> saveParamsMultiDisp_getLastUtrnnoAndDatetime();
 
 	@Result(column = "result", javaType = Integer.class)
 	@ResultType(Integer.class)
 	@Select("SELECT COUNT(1) as result FROM t_cm_inst WHERE id = #{id}")
-	Integer loadInstList_selectCount(@Param("id") Integer id);
+	Integer loadInstList_selectCount(@Param("id") String id);
 
 	@Insert("INSERT INTO t_cm_inst (id,description) VALUES (#{id},#{descx})")
 	void loadInstList_insert(@Param("id") String id, @Param("descx") String descx);
