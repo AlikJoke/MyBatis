@@ -347,8 +347,8 @@ public class DataLoadController {
 		}
 	}
 
-	public static void prepareDowntimes(AtomicInteger interruptFlag, Connection connection) throws SQLException {
-		// AggregationController.prepare_downtimes(interruptFlag, connection);
+	public static void prepareDowntimes(AtomicInteger interruptFlag, ISessionHolder sessionHolder) throws SQLException {
+		AggregationController.prepare_downtimes(interruptFlag, sessionHolder);
 	}
 
 	public static void truncateTrans(Connection connection) throws SQLException {
