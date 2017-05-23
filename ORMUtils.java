@@ -3,6 +3,7 @@ package ru.bpc.cm.orm.common;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSession;
@@ -23,6 +24,23 @@ public class ORMUtils {
 
 	public static final int MAX_PARAMS_FOR_IN_CONDITION = 999;
 
+	public static final int ORACLE_DUP_VAL_ERROR_CODE = 1;
+	public static final int DB2_DUP_VAL_ERROR_CODE = 1;
+	public static final int POSTGRES_DUP_VAL_ERROR_CODE = 1;
+	
+	public static int getDuplicateValueErrorCode(SqlSession session) throws SQLException {
+		String DbName = getDbName(session);
+		if (DbName == "Oracle") {
+			return ORACLE_DUP_VAL_ERROR_CODE;
+		} else if (DbName == "DB2") {
+			return DB2_DUP_VAL_ERROR_CODE;
+		} else if (DbName == "PostgreSQL") {
+			return POSTGRES_DUP_VAL_ERROR_CODE;
+		} else {
+			throw new SQLException();
+		}
+	}
+	
 	public static String getNextSequence(SqlSession session, String seqName) throws SQLException {
 		String DbName = getDbName(session);
 		if (DbName == "Oracle" || DbName == "DB2") {
@@ -203,6 +221,14 @@ public class ORMUtils {
 		}
 		return list.get(0);
 	}
+	
+	public static <T> T getRandomValue(List<T> list) {
+		if (list == null || list.isEmpty()) {
+			return null;
+		}
+		Random rand = new Random();
+		return list.get(rand.nextInt(list.size()));
+	}
 
 	/**
 	 * Возвращает {@code value}, если {@code value != null}, иначе
@@ -222,5 +248,11 @@ public class ORMUtils {
 			return defaultValue;
 		}
 		return value;
+	}
+	
+	public static boolean isExpired(long current) {
+		if (System.currentTimeMillis() > current + 1000 * 60)
+			return true;
+		return false;
 	}
 }

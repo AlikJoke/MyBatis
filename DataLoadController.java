@@ -362,6 +362,8 @@ public class DataLoadController {
 			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_downtime_cashin"));
 			stmt.addBatch(JdbcUtils.getTruncateTableUnrecoverable(connection, "t_cm_intgr_trans_cash_in"));
 			stmt.executeBatch();
+		} catch (Exception e) {
+			
 		} finally {
 			stmt.close();
 		}

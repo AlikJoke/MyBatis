@@ -128,7 +128,7 @@ public interface AggregationMapper extends IMapper {
 	
 	@Result(column = "result", javaType = Integer.class)
 	@ResultType(Integer.class)
-	@Select("SELECT count(1) as resultFROM T_CM_ENC_CASHIN_STAT_DETAILS "
+	@Select("SELECT count(1) as result FROM T_CM_ENC_CASHIN_STAT_DETAILS "
 			+ "WHERE CASH_IN_ENCASHMENT_ID = #{encId} and ACTION_TYPE = #{actionType} and CASS_COUNT > 0")
 	@Options(useCache = true, fetchSize = 1000)
 	List<Integer> checkEncashmentCashInPreload(@Param("encId") Integer encId, @Param("actionType") Integer actionType);
@@ -904,7 +904,7 @@ public interface AggregationMapper extends IMapper {
 			+ "and CASS_NUMBER not in (select CASS_NUMBER from t_cm_enc_cashin_stat_Details "
 			+ "where cash_in_encashment_id = #{encId})")
 	@Options(useCache = true, fetchSize = 1000)
-	List<Integer> insertCiEncashmentsPartAndOut_getCiEncStatDetails(@Param("prevEncId") Integer prevEncId,
+	List<Integer> insertCiEncashmentsPartAndOut_getCiEncStatNumberDetails(@Param("prevEncId") Integer prevEncId,
 			@Param("encId") Integer encId);
 	
 	@Results({
@@ -1367,7 +1367,7 @@ public interface AggregationMapper extends IMapper {
 	@Select("SELECT DISTINCT CASS_NUMBER FROM T_CM_CASHIN_R_CASS_STAT WHERE CASH_IN_ENCASHMENT_ID = #{encId}")
 	@ResultType(Integer.class)
 	@Options(useCache = true, fetchSize = 1000)
-	List<Integer> insertRemainingsForCashInCass_getCassStat(@Param("encId") Integer encId);
+	List<Integer> insertRemainingsForCashInCass_getCassStatNumber(@Param("encId") Integer encId);
 	
 	@Results({
 			@Result(column = "STAT_DATE", property = "key", javaType = Timestamp.class),
@@ -1432,7 +1432,7 @@ public interface AggregationMapper extends IMapper {
 			+ " AND ds.STAT_DATE = #{statDate}")
 	@ResultType(Double.class)
 	@Options(useCache = true)
-	List<Double> insertRemainingsForCashInCass_getFillStatDate(@Param("atmId") String atmId,
+	List<Double> insertRemainingsForCashInCass_getFillStatDateCoeff(@Param("atmId") String atmId,
 			@Param("statDate") Timestamp statDate);
 	
 	@Results({

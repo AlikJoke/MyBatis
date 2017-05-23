@@ -25,7 +25,7 @@ public class AggregationBuilder {
 		return sb.toString();
 	}
 
-	public String prepareDowntimesComplex(Map<String, Object> params) {
+	public String prepareDowntimesComplexBuilder(Map<String, Object> params) {
 		@SuppressWarnings("unchecked")
 		List<Integer> atmList = (List<Integer>) params.get("atmList");
 		StringBuilder sb = new StringBuilder("select PID,START_DATE,COALESCE(END_DATE, CURRENT_TIMESTAMP) as END_DATE "
