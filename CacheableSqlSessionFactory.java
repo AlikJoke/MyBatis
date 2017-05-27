@@ -57,6 +57,18 @@ public class CacheableSqlSessionFactory extends DefaultSqlSessionFactory {
 		sessionItem.increment();
 		return sessionItem.getSession();
 	}
+	
+	@Override
+	public SqlSession openSession(boolean createsNew) {
+		if (createsNew) {
+			CloseableItem sessionItem = new CloseableItem(this.openCustomSession());
+			SessionFactory.getCacheableSessions().put(sessionItem.hashCode(), sessionItem);
+
+			sessionItem.increment();
+			return sessionItem.getSession();
+		}
+		return this.openSession();
+	}
 
 	private SqlSession openCustomSession() {
 		Transaction tx = null;
