@@ -103,13 +103,13 @@ public interface CompareStatsMapper extends IMapper {
 			+ "left OUTER JOIN v_cm_cashout_stat_enc2enc e2e on (ci.encashment_id = e2e.encashment_id) "
 			+ "left OUTER JOIN curr_encashment_out co on (co.atm_id = ci.atm_id and co.encashment_id = e2e.next_encashment_id "
 			+ "AND co.curr_code = ci.curr_code) WHERE ci.atm_id = #{atmId} AND ci.enc_date > #{startDate} "
-			+ "AND ci.enc_date < #{encDate} AND ci.curr_code = #{currCode} ")
+			+ "AND ci.enc_date < #{endDate} AND ci.curr_code = #{currCode} ")
 	@Options(useCache = true)
 	Double getEncLostsForCurr(@Param("atmId") Integer atmId, @Param("startDate") Timestamp startDate,
 			@Param("endDate") Timestamp endDate, @Param("currCode") Integer currCode);
 	
 	@Results({
-			@Result(column = "encashment_id", property = "first", javaType = Double.class),
+			@Result(column = "encashment_id", property = "first", javaType = Integer.class),
 			@Result(column = "CURR_CODE", property = "second", javaType = Integer.class),
 			@Result(column = "CURR_SUMM", property = "third", javaType = Long.class) 
 	})

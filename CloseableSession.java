@@ -23,18 +23,23 @@ public class CloseableSession extends DefaultSqlSession {
 
 	@Override
 	public void close() {
-		CloseableItem sessionItem = new CloseableItem(this);
+		CloseableItem sessionItem = null;
 		boolean isContains = false;
-		if (isContains = SessionFactory.getCacheableSessions().containsKey(sessionItem.hashCode())) {
-			sessionItem = SessionFactory.getCacheableSessions().get(sessionItem.hashCode());
+		if (isContains = SessionFactory.containsSession(this.hashCode())) {
+			sessionItem = SessionFactory.getCachedSession(this.hashCode());
+			sessionItem.getSession().flushStatements();
 			sessionItem.decrement();
 		}
-		if (isContains && sessionItem.isUseless()) {
-			SessionFactory.getCacheableSessions().remove(sessionItem.hashCode());
-			super.close();
-		} else if (!isContains) {
+
+		if (!isContains) {
 			super.close();
 		}
 	}
 
+	@Override
+	public <T> T getMapper(Class<T> type) {
+		if (!getConfiguration().getMapperRegistry().hasMapper(type))
+			getConfiguration().addMapper(type);
+		return getConfiguration().<T>getMapper(type, this);
+	}
 }

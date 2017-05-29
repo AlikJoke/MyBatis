@@ -34,7 +34,7 @@ public class AtmPidListBuilder {
 		}
 		querConstr.setQueryTail(" ORDER BY ATM_GROUP_NAME, atm_id");
 		String query = querConstr.getQuery();
-		return query.replaceFirst("?", "#{atmIdFilter").replaceAll("?", "#{nameAndAddressFilter}");
+		return query.replaceFirst("\\?", "#{atmIdFilter").replaceAll("\\?", "#{nameAndAddressFilter}");
 	}
 
 	public String getAtmListSplitByGroupListDescxBuilder2(Map<String, Object> params) throws SQLException {

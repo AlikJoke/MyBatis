@@ -124,7 +124,6 @@ public interface ReportsDenomCurrMapper extends IMapper {
 			@Result(column = "DENOM_VALUE", property = "denomValue", javaType = Integer.class),
 			@Result(column = "DENOM_COUNT_IN", property = "denomCountIn", javaType = Integer.class),
 			@Result(column = "DENOM_COUNT_OUT", property = "denomCountOut", javaType = Integer.class),
-			@Result(column = "CURR_TRANS_COUNT", property = "transCountIn", javaType = Integer.class),
 			@Result(column = "DENOM_TRANS_COUNT", property = "transCount", javaType = Integer.class),
 			@Result(column = "CURR_TRANS_COUNT", property = "transCoeff", javaType = Double.class),
 			@Result(column = "DENOM_COUNT", property = "denomCount", javaType = Integer.class),

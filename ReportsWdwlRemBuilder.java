@@ -246,7 +246,7 @@ public class ReportsWdwlRemBuilder {
 				+ "ds.denom_remaining as DENOM_REMAINING,ci.code_a3, encashment_id "
 				+ "from V_CM_CASHOUT_DENOM_STAT ds join T_CM_CURR ci on (ds.denom_curr = ci.code_n3) "
 				+ "join T_CM_ATM ai on (ds.ATM_ID = ai.ATM_ID) where ds.STAT_DATE <= #{dateTo} "
-				+ "AND ds.atm_id in (select id from t_cm_temp_atm_list) AND ds.STAT_DATE >= #{} "
+				+ "AND ds.atm_id in (select id from t_cm_temp_atm_list) AND ds.STAT_DATE >= #{dateFrom} "
 				+ "AND (ds.denom_curr = #{wdwlRemCurrCode} OR #{wdwlRemCurrCode} = 0) ";
 		QueryConstructor querConstr = new QueryConstructor();
 		querConstr.setQueryBody(sql.toString(), true);

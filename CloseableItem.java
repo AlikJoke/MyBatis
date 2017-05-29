@@ -7,17 +7,28 @@ import org.apache.ibatis.session.SqlSession;
 public class CloseableItem {
 
 	private SqlSession session;
+	private boolean isBatch;
 	private AtomicInteger opened = new AtomicInteger(0);
 	private AtomicInteger counter = new AtomicInteger(0);
 
+	public CloseableItem(SqlSession session, boolean isBatch) {
+		this.session = session;
+		this.isBatch = isBatch;
+	}
+	
 	public CloseableItem(SqlSession session) {
 		this.session = session;
+		this.isBatch = false;
 	}
 
 	public SqlSession getSession() {
 		return this.session;
 	}
 
+	public boolean isBatch() {
+		return this.isBatch;
+	}
+	
 	public void increment() {
 		counter.set(counter.addAndGet(1));
 		opened.set(opened.addAndGet(1));
@@ -28,7 +39,7 @@ public class CloseableItem {
 	}
 
 	public boolean isUseless() {
-		return opened.get() == 0;
+		return opened.get() == 0 && this.counter.get() > 10;
 	}
 
 	public int getCounter() {

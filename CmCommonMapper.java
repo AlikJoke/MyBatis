@@ -19,10 +19,10 @@ import org.apache.ibatis.annotations.SelectProvider;
 
 import ru.bpc.cm.cashmanagement.CmCommonController;
 import ru.bpc.cm.cashmanagement.orm.builders.CmCommonBuilder;
-import ru.bpc.cm.cashmanagement.orm.items.CodesItem;
-import ru.bpc.cm.cashmanagement.orm.items.ConvertionsRateItem;
-import ru.bpc.cm.cashmanagement.orm.items.FullAddressItem;
-import ru.bpc.cm.config.IMapper;
+import ru.bpc.cm.orm.common.IMapper;
+import ru.bpc.cm.orm.items.CodesItem;
+import ru.bpc.cm.orm.items.ConvertionsRateItem;
+import ru.bpc.cm.orm.items.FullAddressItem;
 import ru.bpc.cm.utils.ObjectPair;
 import ru.bpc.cm.utils.Pair;
 
@@ -55,7 +55,7 @@ public interface CmCommonMapper extends IMapper {
 	@Options(useCache = true, fetchSize = 1000)
 	List<CodesItem> getAtmCurrencies(@Param("atmId") Integer atmId);
 	
-	@Result(column = "CURR_CODE")
+	@Result(column = "CURR_CODE", javaType = Integer.class)
 	@ResultType(Integer.class)
 	@Select("SELECT DISTINCT CURR_CODE FROM ( SELECT MAIN_CURR_CODE as CURR_CODE FROM V_CM_ATM_CURR "
 			+ "UNION SELECT SECONDARY_CURR_CODE FROM V_CM_ATM_CURR UNION "
@@ -246,12 +246,22 @@ public interface CmCommonMapper extends IMapper {
 	@Delete("DELETE FROM T_CM_TEMP_ATM_LIST ")
 	void deleteTempAtms();
 	
+	@Result(column = "result", javaType = String.class)
+	@ResultType(String.class)
+	@Select("SELECT ID as result FROM T_CM_TEMP_ATM_LIST ")
+	List<String> selectTempAtms();
+	
 	@Insert("INSERT INTO T_CM_TEMP_ATM_GROUP_LIST VALUES(#{value})")
 	void insertTempAtmGroups(@Param("value") Integer value);
 	
 	@Insert("INSERT INTO T_CM_TEMP_ATM_GROUP_LIST VALUES(#{item})")
 	void insertTempAtmGroupsIds(@Param("item") Integer item);
 
-	@Delete("DELETE FROM T_CM_TEMP_ATM_GROUP_LIST ")
+	@Delete("DELETE FROM T_CM_TEMP_ATM_GROUP_LIST")
 	void deleteTempAtmGroups();
+	
+	@Result(column = "result", javaType = String.class)
+	@ResultType(String.class)
+	@Select("SELECT ID as result FROM T_CM_TEMP_ATM_GROUP_LIST")
+	List<String> selectFromTempAtmGroups();
 }
