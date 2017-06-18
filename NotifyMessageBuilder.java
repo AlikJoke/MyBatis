@@ -22,7 +22,7 @@ public class NotifyMessageBuilder {
 		if (dateFrom != null)
 			sql.append(" AND CREATE_DATE >= #{dateFrom}");
 
-		sql.append("ORDER BY CREATE_DATE DESC");
+		sql.append(" ORDER BY CREATE_DATE DESC");
 		return sql.toString();
 	}
 }

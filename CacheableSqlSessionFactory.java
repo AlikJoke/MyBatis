@@ -26,7 +26,7 @@ import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
  */
 public class CacheableSqlSessionFactory extends DefaultSqlSessionFactory {
 
-	private final int pool = 10;
+	private final int pool = 30;
 
 	public CacheableSqlSessionFactory(Configuration configuration) {
 		super(configuration);

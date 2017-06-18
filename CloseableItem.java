@@ -39,7 +39,7 @@ public class CloseableItem {
 	}
 
 	public boolean isUseless() {
-		return opened.get() == 0 && this.counter.get() > 10;
+		return opened.get() == 0;
 	}
 
 	public int getCounter() {
