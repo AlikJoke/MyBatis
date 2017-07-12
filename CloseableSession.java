@@ -1,5 +1,7 @@
 package ru.bpc.cm.orm.common;
 
+import java.sql.Connection;
+
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.defaults.DefaultSqlSession;
@@ -31,8 +33,15 @@ public class CloseableSession extends DefaultSqlSession {
 			sessionItem.decrement();
 		}
 
-		if (!isContains) {
+		if (!isContains || sessionItem.isUseless()) {
 			super.close();
+		}
+	}
+
+	@Override
+	public <E> List<E> selectList(String statement) {
+		synchronized (this) {
+			return this.selectList(statement, null);
 		}
 	}
 

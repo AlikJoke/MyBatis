@@ -26,7 +26,7 @@ import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
  */
 public class CacheableSqlSessionFactory extends DefaultSqlSessionFactory {
 
-	private final int pool = 30;
+	private final int pool = 40;
 
 	public CacheableSqlSessionFactory(Configuration configuration) {
 		super(configuration);
@@ -46,7 +46,7 @@ public class CacheableSqlSessionFactory extends DefaultSqlSessionFactory {
 	}
 
 	private SqlSession openAnySession(boolean isBatch) {
-		CloseableItem sessionItem = null;
+		CloseableItem sessionItem = new CloseableItem(this.openCustomSession(isBatch));
 
 		while (true) {
 			try {
@@ -61,8 +61,15 @@ public class CacheableSqlSessionFactory extends DefaultSqlSessionFactory {
 					SessionFactory.getCacheableSessions(isBatch).remove(sessionItem.hashCode());
 					continue;
 				}
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
+
+				if (sessionItem.isUseless()) {
+					SessionFactory.getCacheableSessions(isBatch).remove(sessionItem.hashCode());
+					sessionItem.getSession().close();
+					continue;
+				}
+			} catch (Exception e) {
+				SessionFactory.getCacheableSessions(isBatch).remove(sessionItem.hashCode());
+				continue;
 			}
 			break;
 		}
