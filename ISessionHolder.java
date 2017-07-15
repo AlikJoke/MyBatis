@@ -34,6 +34,18 @@ public interface ISessionHolder {
 	SqlSession getSession(Class<? extends IMapper> clazz, ExecutorType... type);
 	
 	/**
+	 * Получает сессию, добавляя ее в
+	 * {@linkplain Configuration}. После вызова <b>обязательно</b> должен быть
+	 * вызван метод {@linkplain ISessionHolder#close(SqlSession)}.
+	 * <p>
+	 * 
+	 * @param type
+	 *            - тип сессии.
+	 * @return сессию, не может быть {@code null}.
+	 */
+	SqlSession getSession(ExecutorType... type);
+	
+	/**
 	 * Получает сессию по классу-мапперу, добавляя ее в
 	 * {@linkplain Configuration}. После вызова <b>обязательно</b> должен быть
 	 * вызван метод {@linkplain ISessionHolder#close(SqlSession)}.

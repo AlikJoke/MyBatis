@@ -1,5 +1,7 @@
 package ejbs.cm.svcm;
 
+import java.util.Set;
+
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.sql.DataSource;
@@ -10,7 +12,9 @@ import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.reflections.Reflections;
 
+import jersey.repackaged.com.google.common.collect.Sets;
 import ru.bpc.cm.db.DataSourceJNDIDictionary;
 import ru.bpc.cm.orm.common.CacheableSqlSessionFactoryBuilder;
 import ru.bpc.cm.orm.common.IMapper;
@@ -22,12 +26,22 @@ public class SessionHolder implements ISessionHolder {
 	private DataSource dataSource;
 
 	private Configuration configuration;
-
+	
+	private Set<Class<? extends IMapper>> mappers;
+	
+	private void loadMappers() {
+		Reflections reflections = new Reflections("ru.bpc.cm");    
+		mappers = Sets.newHashSet(reflections.getSubTypesOf(IMapper.class));
+		for (Class<? extends IMapper> mapper : mappers)
+			configuration.addMapper(mapper);
+	}
+	
 	private void initConfigurationIfNotInit() {
 		if (configuration == null) {
 			TransactionFactory transactionFactory = new JdbcTransactionFactory();
 			Environment environment = new Environment("development", transactionFactory, dataSource);
 			configuration = new Configuration(environment);
+			this.loadMappers();
 			configuration.setLazyLoadingEnabled(true);
 		}
 	}
@@ -41,6 +55,13 @@ public class SessionHolder implements ISessionHolder {
 	public SqlSession getSession(Class<? extends IMapper> clazz, ExecutorType... type) {
 		initConfigurationIfNotInit();
 		addMapperIfAbsent(clazz);
+		return type.length == 0 ? new CacheableSqlSessionFactoryBuilder().build(configuration).openSession()
+				: new CacheableSqlSessionFactoryBuilder().build(configuration).openSession(type[0]);
+	}
+	
+	@Override
+	public SqlSession getSession(ExecutorType... type) {
+		initConfigurationIfNotInit();
 		return type.length == 0 ? new CacheableSqlSessionFactoryBuilder().build(configuration).openSession()
 				: new CacheableSqlSessionFactoryBuilder().build(configuration).openSession(type[0]);
 	}
